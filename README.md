@@ -1,31 +1,33 @@
 # Srishti
 
-**Agent-Oriented Programming Language (AOPL)**
+### Agent-Oriented Programming Language (AOPL)
 
-Srishti is an experimental programming language designed specifically for AI agents.
+Srishti is an experimental Agent-Oriented Programming Language (AOPL) designed to build reliable, auditable, and scalable AI systems.
 
-Instead of treating agents as runtime abstractions inside frameworks, Srishti makes **Agents** a first-class language primitive and compiles them into deterministic Rust systems.
+Instead of treating agents as runtime abstractions inside frameworks, Srishti makes **Agents first-class language primitives** and compiles them into deterministic Rust systems while providing semantic execution capabilities through LLM-powered runtimes.
 
 ---
 
 ## Vision
 
-Modern AI applications are typically built using:
+Modern AI applications are commonly built using:
 
 * Prompt Chains
 * Agent Frameworks
 * Workflow Graphs
 * Orchestration Layers
 
-These approaches often lack:
+While powerful, these approaches often lack:
 
 * Compile-time validation
 * Strong typing
 * Deterministic execution
-* Native memory abstractions
-* Built-in safety mechanisms
+* Built-in memory abstractions
+* Policy enforcement
+* Safety guardrails
+* Multi-agent coordination
 
-Srishti aims to provide a language-level solution for building reliable AI systems.
+Srishti aims to provide a language-level solution for building production-grade AI systems.
 
 ---
 
@@ -33,31 +35,35 @@ Srishti aims to provide a language-level solution for building reliable AI syste
 
 ### Agents as First-Class Citizens
 
-Agents are defined directly in the language.
+Agents are language primitives, not framework objects.
 
 ### Deterministic Execution
 
-Generated Rust code provides predictable execution.
+Business logic is compiled into predictable Rust code.
 
 ### Semantic Reasoning
 
-Future runtime integration will enable LLM-powered reasoning.
+Agents can invoke LLM-powered semantic engines while preserving deterministic control flow.
 
 ### Built-in Memory
 
-Memory becomes a language primitive rather than an external component.
+Memory is defined directly in the language.
 
-### Guardrails
+### Guardrails & Safety
 
-Safety constraints are defined directly in source code.
+Safety constraints are declared as part of the source code.
 
 ### Compile-Time Validation
 
 Errors should be detected before runtime whenever possible.
 
+### Multi-Agent Systems
+
+Agents can communicate, coordinate, and participate in workflows.
+
 ---
 
-# Example
+## Example
 
 ```srishti
 agent SupportAgent {
@@ -78,7 +84,21 @@ agent SupportAgent {
 
 ---
 
-# Compiler Pipeline
+## Toolchain
+
+Srishti ships with a dedicated CLI.
+
+```bash
+srishti init my-project
+srishti check src/main.srishti
+srishti run src/main.srishti
+srishti build
+srishti install
+```
+
+---
+
+## Compiler Pipeline
 
 ```text
 Srishti Source
@@ -93,131 +113,118 @@ Parser
 AST
       │
       ▼
+Type Checking
+      │
+      ▼
 Validation
       │
       ▼
-Rust Code Generation
+Interpreter / Runtime
       │
       ▼
-Runtime
+Rust Code Generation
 ```
 
 ---
 
-# Architecture
+## Architecture
 
 ```text
-+-------------------+
-|   Srishti Source  |
-+-------------------+
-          |
-          v
-+-------------------+
-|     Compiler      |
-+-------------------+
-          |
-          v
-+-------------------+
-|   Generated Rust  |
-+-------------------+
-          |
-          v
-+-------------------+
-|      Runtime      |
-+-------------------+
-| Deterministic     |
-| Semantic Engine   |
-| Memory System     |
-| Guardrails        |
-+-------------------+
++---------------------+
+|  Srishti Source     |
++---------------------+
+           |
+           v
++---------------------+
+|      Compiler       |
++---------------------+
+| Lexer               |
+| Parser              |
+| AST                 |
+| Type Checker        |
+| Diagnostics         |
++---------------------+
+           |
+           v
++---------------------+
+|     Interpreter     |
++---------------------+
+           |
+           v
++---------------------+
+|      Runtime        |
++---------------------+
+| Semantic Engine     |
+| Memory System       |
+| Event Bus           |
+| Agent Lifecycle     |
+| Guardrails          |
++---------------------+
 ```
 
 ---
 
-# Language Concepts
+## Current Features
 
-## Agent
+### Language
 
-```srishti
-agent TravelAgent {
-}
-```
+* Agents
+* Memory
+* Tools
+* Guardrails
+* Intents
+* Workflows
+* Imports
+* Events
+* Messages
 
-## Memory
-
-```srishti
-memory user_preferences
-```
-
-## Tool
-
-```srishti
-tool search_flights(destination: String)
-```
-
-## Guardrail
-
-```srishti
-guardrail budget_limit(amount: Float) {
-    assert amount <= 500
-}
-```
-
-## Intent
-
-```srishti
-intent book_trip {
-    achieve "Find best flight under budget"
-}
-```
-
----
-
-# Current Features (v0.2.0 Alpha)
-
-Implemented:
+### Compiler
 
 * Lexer
 * Parser
 * AST Generation
+* Semantic Validation
+* Diagnostics
 * Rust Code Generation
-* CLI-based Compilation
-* Agent Definitions
-* Memory Declarations
-* Tool Definitions
-* Guardrails
-* Intents
-* Example Programs
-* Documentation
+
+### Runtime
+
+* Tree-Walking Interpreter
+* Agent Lifecycle Management
+* Event Bus
+* OpenAI Provider
+* Ollama Provider
+* Mock Provider
+
+### CLI
+
+* `srishti init`
+* `srishti run`
+* `srishti build`
+* `srishti check`
+* `srishti install`
+* `srishti fmt`
+
+### Standard Library
+
+* std/http
+* std/json
+* std/logging
+* std/io
 
 ---
 
-# Usage
-
-Compile a Srishti source file:
-
-```bash
-cargo run -- examples/support_agent.srishti
-```
-
-Example output:
-
-```text
-Compiling Srishti file...
-AST successfully parsed.
-Generated Rust code.
-```
-
----
-
-# Project Structure
+## Project Structure
 
 ```text
 srishti/
+├── cli/
 ├── compiler/
 ├── runtime/
-├── docs/
+├── std/
 ├── examples/
+├── docs/
+├── tests/
 ├── README.md
 ├── ROADMAP.md
 └── LICENSE
@@ -225,98 +232,89 @@ srishti/
 
 ---
 
-# Examples
+## Examples
 
 ### Support Agent
 
-```text
-examples/support_agent.srishti
+```bash
+srishti run examples/support_agent.srishti
 ```
 
 ### Travel Agent
 
-```text
-examples/travel_agent.srishti
+```bash
+srishti run examples/travel_agent.srishti
+```
+
+### Multi-Agent Workflow
+
+```bash
+srishti run examples/multi_agent_workflow.srishti
+```
+
+### Chatbot
+
+```bash
+srishti run examples/chatbot.srishti
 ```
 
 ---
 
-# Documentation
+## Roadmap
 
-```text
-docs/
-├── language-spec.md
-├── syntax.md
-└── compiler-architecture.md
-```
+### v0.3.0 Alpha
 
----
-
-# Roadmap
-
-## v0.3.0 Alpha
-
-* Type System
-* Semantic Validation
-* Symbol Resolution
-* Compiler Diagnostics
-
-## v0.4.0 Alpha
-
-* Runtime Engine
+* Advanced Type System
+* Policy Engine
 * Structured Outputs
-* Runtime Configuration
+* Better Diagnostics
 
-## v0.5.0 Alpha
+### v0.4.0 Alpha
 
-* Semantic Engine
-* LLM Integration
-* Planning Framework
-
-## v0.6.0 Alpha
-
-* Memory System
 * Persistent Memory
 * Retrieval APIs
+* Vector Storage
 
-## v0.7.0 Alpha
+### v0.5.0 Alpha
 
-* Multi-Agent Workflows
-* Agent Communication
-* Event System
+* Multi-Agent Networking
+* Distributed Execution
+* Workflow Engine
 
-## v1.0.0 Stable
+### v0.6.0 Alpha
+
+* Package Registry
+* Dependency Resolution
+* Module Publishing
+
+### v1.0.0 Stable
 
 * Production Runtime
-* Package Manager
 * WASM Target
-* Optimization Passes
+* Optimizer
+* Enterprise Policy System
 * Stable Language Specification
 
 ---
 
-# Status
+## Current Status
 
-Current Version:
+**Version:** v0.2.0 Alpha
 
-**Srishti v0.2.0 Alpha**
+Srishti is an experimental language under active development.
 
-Status:
-
-**Experimental / Research Project**
-
-The compiler can successfully parse agent definitions and generate Rust code.
+The project currently includes a compiler, interpreter, runtime, CLI toolchain, standard library foundation, and multi-agent execution architecture.
 
 ---
 
-# Contributing
+## Contributing
 
-Contributions, feedback, issues, and design discussions are welcome.
+Contributions, issues, ideas, and design discussions are welcome.
 
-Please open an issue before proposing major language changes.
+Please open an issue before proposing large language or runtime changes.
 
 ---
 
-# License
+## License
 
 Apache License 2.0
