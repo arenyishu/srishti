@@ -1,0 +1,11 @@
+agent Json {
+    tool parse(json_string: String) {
+        let result = "#[rust] serde_json::from_str(json_string).unwrap_or(serde_json::Value::Null)"
+        return result
+    }
+    
+    tool stringify(obj: Custom("Value")) {
+        let result = "#[rust] serde_json::to_string(obj).unwrap_or_default()"
+        return result
+    }
+}

@@ -142,9 +142,18 @@ impl Codegen {
         match expr {
             Expression::Variable(v) => v.clone(),
             Expression::LiteralFloat(f) => format!("{}_f64", f),
+            Expression::LiteralInt(i) => format!("{}", i),
             Expression::LiteralString(s) => format!("\"{}\".to_string()", s),
+            Expression::BooleanLiteral(b) => format!("{}", b),
             Expression::BinaryOp { left, op, right } => {
                 format!("{} {} {}", self.gen_expr(left), op, self.gen_expr(right))
+            }
+            Expression::MethodCall { object, method, args } => {
+                let args_str: Vec<String> = args.iter().map(|a| self.gen_expr(a)).collect();
+                format!("{}.{}({})", self.gen_expr(object), method, args_str.join(", "))
+            }
+            Expression::FieldAccess { object, field } => {
+                format!("{}.{}", self.gen_expr(object), field)
             }
         }
     }

@@ -1199,6 +1199,7 @@ name = "srishti-compiler"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "colored",
  "regex",
  "srishti-runtime",
 ]

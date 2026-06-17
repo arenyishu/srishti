@@ -1,85 +1,53 @@
 use crate::ast::*;
-use srishti_runtime::SemanticEngine;
+use srishti_runtime::{AgentRuntime, SemanticEngine, VectorMemory};
 use std::collections::HashMap;
 
 pub struct Interpreter {
-    semantic_engine: SemanticEngine,
+    agents: HashMap<String, AgentInstance>,
+}
+
+pub struct AgentInstance {
+    pub name: String,
+    pub memories: HashMap<String, VectorMemory>,
+    pub semantic_engine: SemanticEngine,
+    pub runtime: AgentRuntime,
 }
 
 impl Interpreter {
     pub fn new() -> Self {
-        // Simple fallback logic for Phase 3
-        let provider = if std::env::var("OPENAI_API_KEY").is_ok() {
-            "openai"
-        } else {
-            "mock"
-        };
-        let api_key = std::env::var("OPENAI_API_KEY").unwrap_or_default();
-
         Self {
-            semantic_engine: SemanticEngine::new(api_key, provider.to_string()),
+            agents: HashMap::new(),
         }
     }
 
-    pub async fn execute(&mut self, program: &Program) -> anyhow::Result<()> {
-        if program.agents.is_empty() {
-            return Err(anyhow::anyhow!("No agents defined in the program."));
-        }
+    pub async fn execute(&mut self, program: &Program) -> Result<(), String> {
+        let event_bus = std::sync::Arc::new(srishti_runtime::EventBus::new(100));
 
-        let agent = &program.agents[0];
-        println!("🤖 Booting Agent: {}", agent.name);
-        println!("🧠 LLM Provider: {}", self.semantic_engine.provider_name());
-
-        // Process Guardrails conceptually (we will just print them for now in the interpreter)
-        if !agent.guardrails.is_empty() {
-            println!("🛡️ Loaded {} Guardrails", agent.guardrails.len());
-        }
-
-        // Execute Intents
-        for intent in &agent.intents {
-            println!("⚡ Executing Intent: {}", intent.name);
-            for stmt in &intent.body {
-                self.execute_statement(stmt).await?;
-            }
-        }
-
-        println!("✅ Agent {} execution complete.", agent.name);
-        Ok(())
-    }
-
-    async fn execute_statement(&self, stmt: &Statement) -> anyhow::Result<()> {
-        match stmt {
-            Statement::Achieve { goal } => {
-                let context = HashMap::new();
-                let response = self.semantic_engine.achieve(goal, &context).await?;
-                println!("   💡 LLM Output: {}", response);
-                Ok(())
-            }
-            Statement::Assert {
-                condition,
-                else_action,
-            } => {
-                println!("   🔍 Evaluating Assert: {:?}", condition);
-                // In a full interpreter, we would evaluate the AST expression.
-                // For Phase 3 MVP, we just acknowledge it.
-                if let Some(action) = else_action {
-                    println!("      ↳ Else action: {}", action);
-                }
-                Ok(())
-            }
-            Statement::RawRust(code) => {
-                println!(
-                    "   🦀 (Skipping Raw Rust block during Interpretation: {})",
-                    code
+        // 1. Instantiate all agents
+        for agent_decl in &program.agents {
+            let mut memories = HashMap::new();
+            for mem_decl in &agent_decl.memories {
+                memories.insert(
+                    mem_decl.name.clone(),
+                    VectorMemory::new(&format!("{}_{}", agent_decl.name, mem_decl.name)),
                 );
-                Ok(())
             }
-        }
-    }
-}
 
-impl Default for Interpreter {
-    fn default() -> Self {
-        Self::new()
+            let semantic_engine = SemanticEngine::mock(); // Default to mock for interpreter run
+            let runtime = AgentRuntime::new(agent_decl.name.clone(), event_bus.clone());
+
+            let instance = AgentInstance {
+                name: agent_decl.name.clone(),
+                memories,
+                semantic_engine,
+                runtime,
+            };
+
+            self.agents.insert(agent_decl.name.clone(), instance);
+            println!("Agent instantiated: {}", agent_decl.name);
+        }
+
+        println!("Execution finished (Interpreter MVP).");
+        Ok(())
     }
 }

@@ -1,0 +1,13 @@
+agent Logger {
+    tool info(msg: String) {
+        let out = "#[rust] println!(\"[INFO] {}\", msg)"
+    }
+    
+    tool error(msg: String) {
+        let out = "#[rust] eprintln!(\"[ERROR] {}\", msg)"
+    }
+    
+    tool warn(msg: String) {
+        let out = "#[rust] println!(\"[WARN] {}\", msg)"
+    }
+}

@@ -1,0 +1,10 @@
+agent IO {
+    tool print(msg: String) {
+        let _ = "#[rust] println!(\"{}\", msg)"
+    }
+    
+    tool read_line() {
+        let result = "#[rust] { let mut s = String::new(); std::io::stdin().read_line(&mut s).unwrap(); s }"
+        return result
+    }
+}

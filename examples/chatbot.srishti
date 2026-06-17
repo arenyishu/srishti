@@ -1,0 +1,27 @@
+import IO from "std/io"
+
+agent Chatbot {
+    memory conversation_history
+
+    intent respond_to_user {
+        achieve "Provide a helpful, friendly response to the user's input based on previous context"
+    }
+
+    state lifecycle {
+        idle -> responding : on message_received
+        responding -> idle : on response_sent
+    }
+
+    on start_chat {
+        IO.print("Hello! I am Srishti Chatbot. How can I help you today?")
+        let input = IO.read_line()
+        emit message_received(input)
+    }
+
+    on message_received(msg: String) {
+        conversation_history.store("user_msg", msg)
+        let response = respond_to_user()
+        IO.print(response)
+        emit response_sent()
+    }
+}

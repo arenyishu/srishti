@@ -1,0 +1,36 @@
+import Logger from "std/logging"
+
+message TicketRequest {
+    customer_id: String
+    issue: String
+}
+
+agent SupportAgent {
+    memory ticket_history
+    
+    intent resolve_ticket {
+        achieve "Analyze the ticket and find the best resolution"
+    }
+
+    on ticket_received(ticket: TicketRequest) {
+        let history = ticket_history.search(ticket.customer_id, 5)
+        resolve_ticket()
+        emit QA_review_needed(ticket)
+    }
+}
+
+agent QAAgent {
+    intent verify_resolution {
+        achieve "Verify that the support agent's resolution meets quality standards"
+    }
+
+    on QA_review_needed(ticket: TicketRequest) {
+        verify_resolution()
+        Logger.info("QA Review completed")
+    }
+}
+
+workflow TicketPipeline {
+    step classify -> SupportAgent.resolve_ticket
+    step verify -> QAAgent.verify_resolution
+}

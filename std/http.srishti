@@ -1,0 +1,13 @@
+agent HttpClient {
+    tool get(url: String) {
+        // deterministic block
+        let result = "#[rust] reqwest::get(url).await?.text().await?"
+        return result
+    }
+
+    tool post(url: String, body: String) {
+        // deterministic block
+        let result = "#[rust] reqwest::Client::new().post(url).body(body).send().await?.text().await?"
+        return result
+    }
+}

@@ -1,82 +1,208 @@
 use crate::ast::*;
-use crate::lexer::Token;
+use crate::lexer::{SpannedToken, Token, Span};
 
 pub struct Parser {
-    tokens: Vec<Token>,
+    tokens: Vec<SpannedToken>,
     current: usize,
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
+    pub fn new(tokens: Vec<SpannedToken>) -> Self {
         Self { tokens, current: 0 }
     }
 
-    fn peek(&self) -> Option<Token> {
+    fn peek(&self) -> Option<SpannedToken> {
         self.tokens.get(self.current).cloned()
     }
 
-    fn advance(&mut self) -> Option<Token> {
+    fn peek_token(&self) -> Option<Token> {
+        self.peek().map(|t| t.token)
+    }
+
+    fn current_span(&self) -> Span {
+        self.peek().map(|t| t.span).unwrap_or_default()
+    }
+
+    fn advance(&mut self) -> Option<SpannedToken> {
         let t = self.peek();
         self.current += 1;
         t
     }
 
-    fn expect(&mut self, expected: Token) -> Result<(), String> {
+    fn expect(&mut self, expected: Token) -> Result<Span, String> {
         if let Some(t) = self.advance() {
-            if t == expected {
-                Ok(())
+            if t.token == expected {
+                Ok(t.span)
             } else {
-                Err(format!("Expected {:?}, got {:?}", expected, t))
+                Err(format!("Expected {:?}, got {:?} at line {}", expected, t.token, t.span.line))
             }
         } else {
             Err(format!("Expected {:?}, got EOF", expected))
         }
     }
 
-    fn expect_ident(&mut self) -> Result<String, String> {
-        if let Some(Token::Identifier(id)) = self.advance() {
-            Ok(id)
+    fn expect_ident(&mut self) -> Result<(String, Span), String> {
+        if let Some(t) = self.advance() {
+            if let Token::Identifier(id) = t.token {
+                Ok((id, t.span))
+            } else {
+                Err(format!("Expected identifier, got {:?} at line {}", t.token, t.span.line))
+            }
         } else {
-            Err("Expected identifier".to_string())
+            Err("Expected identifier, got EOF".to_string())
         }
     }
 
     pub fn parse(&mut self) -> Result<Program, String> {
         let mut agents = Vec::new();
+        let mut imports = Vec::new();
+        let mut messages = Vec::new();
+        let mut workflows = Vec::new();
+        let start_span = self.current_span();
 
         while let Some(t) = self.peek() {
-            match t {
-                Token::Agent => {
-                    agents.push(self.parse_agent()?);
-                }
+            match t.token {
+                Token::Import => imports.push(self.parse_import()?),
+                Token::Message => messages.push(self.parse_message()?),
+                Token::Workflow => workflows.push(self.parse_workflow()?),
+                Token::Agent => agents.push(self.parse_agent()?),
                 Token::EOF => break,
-                _ => return Err(format!("Unexpected top level token {:?}", t)),
+                _ => return Err(format!("Unexpected top level token {:?} at line {}", t.token, t.span.line)),
             }
         }
-        Ok(Program { agents })
+        
+        let mut end_span = self.current_span();
+        if self.current > 0 {
+            end_span = self.tokens[self.current - 1].span.clone();
+        }
+
+        Ok(Program {
+            imports,
+            messages,
+            agents,
+            workflows,
+            span: Span::new(start_span.line, start_span.column, start_span.offset),
+        })
+    }
+
+    fn parse_import(&mut self) -> Result<ImportDecl, String> {
+        let start_span = self.expect(Token::Import)?;
+        
+        let mut items = Vec::new();
+        let mut path = String::new();
+        let mut alias = None;
+
+        // Either `import * from "..."` or `import Agent from "..."`
+        if self.peek_token() == Some(Token::Star) {
+            self.advance();
+            self.expect(Token::From)?;
+            if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
+                path = s;
+            } else {
+                return Err("Expected string literal after 'from'".to_string());
+            }
+        } else {
+            let (id, _) = self.expect_ident()?;
+            items.push(id);
+            self.expect(Token::From)?;
+            if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
+                path = s;
+            } else {
+                return Err("Expected string literal after 'from'".to_string());
+            }
+        }
+
+        if self.peek_token() == Some(Token::As) {
+            self.advance();
+            let (id, _) = self.expect_ident()?;
+            alias = Some(id);
+        }
+
+        Ok(ImportDecl {
+            path,
+            items,
+            alias,
+            span: start_span,
+        })
+    }
+
+    fn parse_message(&mut self) -> Result<MessageDecl, String> {
+        let start_span = self.expect(Token::Message)?;
+        let (name, _) = self.expect_ident()?;
+        self.expect(Token::OpenBrace)?;
+        
+        let mut fields = Vec::new();
+        while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+            let (field_name, field_span) = self.expect_ident()?;
+            self.expect(Token::Colon)?;
+            let typ = self.parse_type()?;
+            fields.push(Argument { name: field_name, typ, span: field_span });
+            
+            // Optional comma
+            if self.peek_token() == Some(Token::Comma) {
+                self.advance();
+            }
+        }
+        self.expect(Token::CloseBrace)?;
+
+        Ok(MessageDecl { name, fields, span: start_span })
+    }
+
+    fn parse_workflow(&mut self) -> Result<WorkflowDecl, String> {
+        let start_span = self.expect(Token::Workflow)?;
+        let (name, _) = self.expect_ident()?;
+        self.expect(Token::OpenBrace)?;
+
+        let mut steps = Vec::new();
+        while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+            let (step_name, step_span) = self.expect_ident()?;
+            self.expect(Token::Arrow)?;
+            
+            let (agent, _) = self.expect_ident()?;
+            self.expect(Token::Dot)?;
+            let (intent, _) = self.expect_ident()?;
+            
+            steps.push(WorkflowStep {
+                name: step_name,
+                agent,
+                intent,
+                span: step_span,
+            });
+
+            if self.peek_token() == Some(Token::Comma) {
+                self.advance();
+            }
+        }
+        self.expect(Token::CloseBrace)?;
+
+        Ok(WorkflowDecl { name, steps, span: start_span })
     }
 
     fn parse_agent(&mut self) -> Result<AgentDecl, String> {
-        self.expect(Token::Agent)?;
-        let name = self.expect_ident()?;
+        let start_span = self.expect(Token::Agent)?;
+        let (name, _) = self.expect_ident()?;
         self.expect(Token::OpenBrace)?;
 
         let mut tools = Vec::new();
         let mut guardrails = Vec::new();
         let mut intents = Vec::new();
         let mut memories = Vec::new();
+        let mut states = Vec::new();
+        let mut event_handlers = Vec::new();
 
         while let Some(t) = self.peek() {
-            if t == Token::CloseBrace {
+            if t.token == Token::CloseBrace {
                 self.advance();
                 break;
             }
-            match t {
+            match t.token {
                 Token::Memory => memories.push(self.parse_memory()?),
                 Token::Intent => intents.push(self.parse_intent()?),
                 Token::Tool => tools.push(self.parse_tool()?),
                 Token::Guardrail => guardrails.push(self.parse_guardrail()?),
-                _ => return Err(format!("Unexpected token inside agent: {:?}", t)),
+                Token::State => states.push(self.parse_state()?),
+                Token::On => event_handlers.push(self.parse_event_handler()?),
+                _ => return Err(format!("Unexpected token inside agent: {:?} at line {}", t.token, t.span.line)),
             }
         }
         Ok(AgentDecl {
@@ -85,17 +211,65 @@ impl Parser {
             guardrails,
             intents,
             memories,
+            states,
+            event_handlers,
+            span: start_span,
         })
     }
 
+    fn parse_state(&mut self) -> Result<StateDecl, String> {
+        let start_span = self.expect(Token::State)?;
+        let (name, _) = self.expect_ident()?;
+        self.expect(Token::OpenBrace)?;
+
+        let mut transitions = Vec::new();
+        while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+            let (from, t_span) = self.expect_ident()?;
+            self.expect(Token::Arrow)?;
+            let (to, _) = self.expect_ident()?;
+            self.expect(Token::Colon)?;
+            self.expect(Token::On)?;
+            let (on_event, _) = self.expect_ident()?;
+
+            transitions.push(TransitionDecl {
+                from,
+                to,
+                on_event,
+                span: t_span,
+            });
+
+            if self.peek_token() == Some(Token::Comma) {
+                self.advance();
+            }
+        }
+        self.expect(Token::CloseBrace)?;
+
+        Ok(StateDecl { name, transitions, span: start_span })
+    }
+
+    fn parse_event_handler(&mut self) -> Result<EventHandler, String> {
+        let start_span = self.expect(Token::On)?;
+        let (event_name, _) = self.expect_ident()?;
+        let params = if self.peek_token() == Some(Token::OpenParen) {
+            self.parse_args()?
+        } else {
+            Vec::new()
+        };
+        
+        self.expect(Token::OpenBrace)?;
+        let body = self.parse_statements()?;
+
+        Ok(EventHandler { event_name, params, body, span: start_span })
+    }
+
     fn parse_memory(&mut self) -> Result<MemoryDecl, String> {
-        self.expect(Token::Memory)?;
-        let name = self.expect_ident()?;
-        Ok(MemoryDecl { name })
+        let span = self.expect(Token::Memory)?;
+        let (name, _) = self.expect_ident()?;
+        Ok(MemoryDecl { name, span })
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
-        let t = self.expect_ident()?;
+        let (t, _) = self.expect_ident()?;
         match t.as_str() {
             "Float" => Ok(Type::Float),
             "String" => Ok(Type::String),
@@ -109,60 +283,57 @@ impl Parser {
         self.expect(Token::OpenParen)?;
         let mut args = Vec::new();
         while let Some(t) = self.peek() {
-            if t == Token::CloseParen {
+            if t.token == Token::CloseParen {
                 self.advance();
                 break;
             }
-            let name = self.expect_ident()?;
+            let (name, span) = self.expect_ident()?;
             self.expect(Token::Colon)?;
             let typ = self.parse_type()?;
-            args.push(Argument { name, typ });
-            // normally would handle commas, for this MVP we might just loop
+            args.push(Argument { name, typ, span });
+            
+            if self.peek_token() == Some(Token::Comma) {
+                self.advance();
+            } else if self.peek_token() != Some(Token::CloseParen) {
+                return Err("Expected comma or ) in arguments".to_string());
+            }
         }
         Ok(args)
     }
 
     fn parse_tool(&mut self) -> Result<ToolDecl, String> {
-        self.expect(Token::Tool)?;
-        let name = self.expect_ident()?;
+        let span = self.expect(Token::Tool)?;
+        let (name, _) = self.expect_ident()?;
         let args = self.parse_args()?;
 
         let mut body = None;
-        if self.peek() == Some(Token::OpenBrace) {
-            self.advance();
-            // skip contents for MVP, except CloseBrace
-            while let Some(t) = self.peek() {
-                if t == Token::CloseBrace {
-                    self.advance();
-                    break;
-                }
-                self.advance();
-            }
-            body = Some(vec![]);
+        if self.peek_token() == Some(Token::OpenBrace) {
+            self.expect(Token::OpenBrace)?;
+            body = Some(self.parse_statements()?);
         }
 
-        Ok(ToolDecl { name, args, body })
+        Ok(ToolDecl { name, args, body, span })
     }
 
     fn parse_guardrail(&mut self) -> Result<GuardrailDecl, String> {
-        self.expect(Token::Guardrail)?;
-        let name = self.expect_ident()?;
+        let span = self.expect(Token::Guardrail)?;
+        let (name, _) = self.expect_ident()?;
         let args = self.parse_args()?;
         self.expect(Token::OpenBrace)?;
 
         let mut body = Vec::new();
         while let Some(t) = self.peek() {
-            if t == Token::CloseBrace {
+            if t.token == Token::CloseBrace {
                 self.advance();
                 break;
             }
-            if t == Token::Assert {
+            if t.token == Token::Assert {
                 body.push(self.parse_assert()?);
             } else {
-                return Err(format!("Unexpected token inside guardrail: {:?}", t));
+                return Err(format!("Unexpected token inside guardrail: {:?}", t.token));
             }
         }
-        Ok(GuardrailDecl { name, args, body })
+        Ok(GuardrailDecl { name, args, body, span })
     }
 
     fn parse_assert(&mut self) -> Result<Statement, String> {
@@ -178,9 +349,9 @@ impl Parser {
         };
 
         let mut else_action = None;
-        if self.peek() == Some(Token::Else) {
+        if self.peek_token() == Some(Token::Else) {
             self.advance();
-            if let Some(Token::StringLiteral(s)) = self.advance() {
+            if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
                 else_action = Some(s);
             } else {
                 return Err("Expected string literal after else".to_string());
@@ -194,48 +365,160 @@ impl Parser {
     }
 
     fn parse_operator(&mut self) -> Result<String, String> {
-        match self.advance() {
+        match self.advance().map(|t| t.token) {
             Some(Token::OpLessThanOrEqual) => Ok("<=".to_string()),
             Some(Token::OpGreaterThanOrEqual) => Ok(">=".to_string()),
             Some(Token::OpLessThan) => Ok("<".to_string()),
             Some(Token::OpGreaterThan) => Ok(">".to_string()),
             Some(Token::OpEquals) => Ok("==".to_string()),
             Some(Token::OpNotEquals) => Ok("!=".to_string()),
-            _ => Err("Expected comparison operator".to_string()),
+            Some(Token::Equals) => Ok("=".to_string()),
+            _ => Err("Expected operator".to_string()),
         }
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
-        match self.advance() {
-            Some(Token::Identifier(id)) => Ok(Expression::Variable(id)),
-            Some(Token::FloatLiteral(f)) => Ok(Expression::LiteralFloat(f)),
-            Some(Token::StringLiteral(s)) => Ok(Expression::LiteralString(s)),
-            _ => Err("Expected expression".to_string()),
+        // Very basic expression parsing. MVP.
+        let mut expr = match self.advance().map(|t| t.token) {
+            Some(Token::Identifier(id)) => Expression::Variable(id),
+            Some(Token::FloatLiteral(f)) => Expression::LiteralFloat(f),
+            Some(Token::IntegerLiteral(i)) => Expression::LiteralInt(i),
+            Some(Token::StringLiteral(s)) => Expression::LiteralString(s),
+            Some(Token::True) => Expression::BooleanLiteral(true),
+            Some(Token::False) => Expression::BooleanLiteral(false),
+            _ => return Err("Expected expression".to_string()),
+        };
+
+        // Handle dot access (methods / fields)
+        while self.peek_token() == Some(Token::Dot) {
+            self.advance();
+            let (field, _) = self.expect_ident()?;
+            
+            if self.peek_token() == Some(Token::OpenParen) {
+                // Method call
+                self.expect(Token::OpenParen)?;
+                let mut args = Vec::new();
+                while self.peek_token() != Some(Token::CloseParen) && self.peek_token() != Some(Token::EOF) {
+                    args.push(self.parse_expression()?);
+                    if self.peek_token() == Some(Token::Comma) {
+                        self.advance();
+                    }
+                }
+                self.expect(Token::CloseParen)?;
+                expr = Expression::MethodCall {
+                    object: Box::new(expr),
+                    method: field,
+                    args,
+                };
+            } else {
+                // Field access
+                expr = Expression::FieldAccess {
+                    object: Box::new(expr),
+                    field,
+                };
+            }
+        }
+
+        Ok(expr)
+    }
+
+    fn parse_statements(&mut self) -> Result<Vec<Statement>, String> {
+        let mut stmts = Vec::new();
+        while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+            stmts.push(self.parse_statement()?);
+        }
+        self.expect(Token::CloseBrace)?;
+        Ok(stmts)
+    }
+
+    fn parse_statement(&mut self) -> Result<Statement, String> {
+        match self.peek_token() {
+            Some(Token::Let) => {
+                self.advance();
+                let (name, _) = self.expect_ident()?;
+                self.expect(Token::Equals)?;
+                let value = self.parse_expression()?;
+                Ok(Statement::LetBinding { name, value: Box::new(value) })
+            }
+            Some(Token::Return) => {
+                self.advance();
+                let mut val = None;
+                // If the next token isn't a closing brace/semicolon, try to parse expr
+                if self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::Semicolon) {
+                    val = Some(Box::new(self.parse_expression()?));
+                }
+                Ok(Statement::ReturnStmt { value: val })
+            }
+            Some(Token::Emit) => {
+                self.advance();
+                let (event_name, _) = self.expect_ident()?;
+                let mut args = Vec::new();
+                if self.peek_token() == Some(Token::OpenParen) {
+                    self.expect(Token::OpenParen)?;
+                    while self.peek_token() != Some(Token::CloseParen) && self.peek_token() != Some(Token::EOF) {
+                        args.push(self.parse_expression()?);
+                        if self.peek_token() == Some(Token::Comma) {
+                            self.advance();
+                        }
+                    }
+                    self.expect(Token::CloseParen)?;
+                }
+                Ok(Statement::EmitEvent { event_name, args })
+            }
+            Some(Token::If) => {
+                self.advance();
+                let condition = self.parse_expression()?;
+                self.expect(Token::OpenBrace)?;
+                let then_body = self.parse_statements()?;
+                let mut else_body = None;
+                if self.peek_token() == Some(Token::Else) {
+                    self.advance();
+                    self.expect(Token::OpenBrace)?;
+                    else_body = Some(self.parse_statements()?);
+                }
+                Ok(Statement::IfStmt {
+                    condition: Box::new(condition),
+                    then_body,
+                    else_body,
+                })
+            }
+            Some(Token::Achieve) => {
+                self.advance();
+                if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
+                    Ok(Statement::Achieve { goal: s })
+                } else {
+                    Err("Expected string literal after achieve".to_string())
+                }
+            }
+            _ => {
+                let expr = self.parse_expression()?;
+                Ok(Statement::ExprStmt(expr))
+            }
         }
     }
 
     fn parse_intent(&mut self) -> Result<IntentDecl, String> {
-        self.expect(Token::Intent)?;
-        let name = self.expect_ident()?;
+        let span = self.expect(Token::Intent)?;
+        let (name, _) = self.expect_ident()?;
         self.expect(Token::OpenBrace)?;
 
         let mut body = Vec::new();
         while let Some(t) = self.peek() {
-            if t == Token::CloseBrace {
+            if t.token == Token::CloseBrace {
                 self.advance();
                 break;
             }
-            if t == Token::Achieve {
+            if t.token == Token::Achieve {
                 self.advance(); // consume 'achieve'
-                if let Some(Token::StringLiteral(s)) = self.advance() {
+                if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
                     body.push(Statement::Achieve { goal: s });
                 } else {
                     return Err("Expected string literal after achieve".to_string());
                 }
             } else {
-                return Err(format!("Unexpected token inside intent: {:?}", t));
+                return Err(format!("Unexpected token inside intent: {:?}", t.token));
             }
         }
-        Ok(IntentDecl { name, body })
+        Ok(IntentDecl { name, body, span })
     }
 }

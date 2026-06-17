@@ -142,6 +142,69 @@ impl LLMProvider for MockProvider {
     }
 }
 
+/// Ollama-compatible provider (Local LLM)
+pub struct OllamaProvider {
+    endpoint: String,
+    model: String,
+}
+
+impl OllamaProvider {
+    pub fn new(model: String) -> Self {
+        Self {
+            endpoint: "http://localhost:11434/api/generate".to_string(),
+            model,
+        }
+    }
+}
+
+#[async_trait]
+impl LLMProvider for OllamaProvider {
+    async fn complete(
+        &self,
+        prompt: &str,
+        context: &HashMap<String, Value>,
+    ) -> Result<String, anyhow::Error> {
+        let mut full_prompt = String::new();
+        if !context.is_empty() {
+            full_prompt.push_str(&format!("Context: {}\n\n", serde_json::to_string(context).unwrap_or_default()));
+        }
+        full_prompt.push_str(prompt);
+
+        let client = reqwest::Client::new();
+        let response = client
+            .post(&self.endpoint)
+            .json(&serde_json::json!({
+                "model": self.model,
+                "prompt": full_prompt,
+                "stream": false
+            }))
+            .send()
+            .await?;
+
+        let body: Value = response.json().await?;
+        let content = body["response"]
+            .as_str()
+            .unwrap_or("No response")
+            .to_string();
+
+        Ok(content)
+    }
+
+    async fn structured_output(&self, prompt: &str, schema: &str) -> Result<Value, anyhow::Error> {
+        let full_prompt = format!(
+            "{}\n\nRespond with valid JSON matching this schema:\n{}",
+            prompt, schema
+        );
+        let result = self.complete(&full_prompt, &HashMap::new()).await?;
+        let value: Value = serde_json::from_str(&result).unwrap_or(Value::String(result));
+        Ok(value)
+    }
+
+    fn provider_name(&self) -> &str {
+        "ollama"
+    }
+}
+
 /// The main Semantic Engine that bridges deterministic and AI execution
 pub struct SemanticEngine {
     provider: Box<dyn LLMProvider>,
@@ -151,6 +214,7 @@ impl SemanticEngine {
     pub fn new(api_key: String, provider_name: String) -> Self {
         let provider: Box<dyn LLMProvider> = match provider_name.as_str() {
             "openai" => Box::new(OpenAIProvider::new(api_key, "gpt-4o".to_string())),
+            "ollama" => Box::new(OllamaProvider::new("llama3".to_string())),
             _ => Box::new(MockProvider::new()),
         };
         Self { provider }
