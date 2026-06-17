@@ -2,9 +2,9 @@
 
 ## Vision
 
-Srishti is an Agent-Oriented Programming Language (AOPL) that treats AI agents as first-class language primitives and compiles them into deterministic execution systems with semantic reasoning capabilities.
+Srishti is an Agent-Oriented Programming Language (AOPL) that treats AI agents as first-class language primitives and provides a complete platform for building reliable, auditable, memory-aware, and multi-agent AI systems.
 
-The long-term goal is to provide a complete platform for building reliable, auditable, memory-aware, and multi-agent AI applications.
+The long-term goal is to make agent development as natural as web development is today.
 
 ---
 
@@ -17,7 +17,7 @@ The long-term goal is to provide a complete platform for building reliable, audi
 * AST Generation
 * Rust Code Generation
 * Initial Agent Syntax
-* Basic Compiler Architecture
+* Compiler Architecture
 
 **Status:** Released
 
@@ -25,32 +25,35 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 # v0.2.0 Alpha ✅
 
-## Language & Toolchain Foundation
+## Language, Runtime & Toolchain Foundation
 
 ### Language Features
 
-* Agent Definitions
-* Memory Declarations
-* Tool Definitions
+* Agents
+* Memory
+* Tools
 * Guardrails
 * Intents
+* Messages
+* Events
+* Workflows
 
-### Toolchain
+### CLI Toolchain
 
-* CLI Commands
-
-  * `srishti run`
-  * `srishti build`
-  * `srishti check`
-  * `srishti init`
-  * `srishti install`
-  * `srishti fmt`
+* `srishti init`
+* `srishti run`
+* `srishti build`
+* `srishti check`
+* `srishti install`
+* `srishti fmt`
 
 ### Runtime Foundation
 
 * Tree-Walking Interpreter
-* Event Bus
 * Agent Lifecycle Management
+* Event Bus
+* Workflow Execution
+* Memory Foundation
 * Mock Semantic Engine
 * OpenAI Provider Foundation
 * Ollama Provider Foundation
@@ -58,9 +61,17 @@ The long-term goal is to provide a complete platform for building reliable, audi
 ### Project System
 
 * Workspace Support
-* Project Manifests (`srishti.toml`)
+* `srishti.toml`
 * Module Resolution Foundation
 * Standard Library Foundation
+
+### Demonstrations
+
+* Support Agent
+* Travel Agent
+* Chatbot
+* Multi-Agent Workflow
+* Customer Support Automation System
 
 **Status:** Released
 
@@ -68,7 +79,7 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 # v0.3.0 Alpha 🚧
 
-## Language Correctness & Safety
+## Language Correctness & Developer Experience
 
 ### Type System
 
@@ -76,20 +87,21 @@ The long-term goal is to provide a complete platform for building reliable, audi
 * String
 * Boolean
 * Structured Types
+* Type Inference Foundation
 
 ### Compiler Validation
 
-* Semantic Validation
 * Symbol Resolution
 * Scope Analysis
 * Duplicate Definition Detection
+* Workflow Validation
 
 ### Diagnostics
 
 * Source Spans
 * Error Recovery
+* Rich Diagnostics
 * Compiler Warnings
-* Rich Diagnostic Messages
 
 ### Testing
 
@@ -97,8 +109,9 @@ The long-term goal is to provide a complete platform for building reliable, audi
 * Parser Tests
 * Typechecker Tests
 * Interpreter Tests
+* Integration Tests
 
-**Goal:** Catch language and logic errors before execution.
+**Goal:** Catch language and workflow errors before execution.
 
 ---
 
@@ -109,9 +122,10 @@ The long-term goal is to provide a complete platform for building reliable, audi
 ### Policy System
 
 * Policy Definitions
-* Compliance Rules
 * Runtime Enforcement
-* Audit Logs
+* Compliance Rules
+* Approval Workflows
+* Audit Logging
 
 ### Structured Outputs
 
@@ -119,13 +133,13 @@ The long-term goal is to provide a complete platform for building reliable, audi
 * Schema Validation
 * Typed Responses
 
-### Runtime Improvements
+### Runtime Enhancements
 
-* Better Tool Execution
+* Tool Execution Framework
 * Runtime Configuration
 * Execution Tracing
 
-**Goal:** Make AI agents safe, predictable, and auditable.
+**Goal:** Build safe, auditable AI systems.
 
 ---
 
@@ -133,11 +147,12 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 ## Semantic Intelligence
 
-### LLM Integration
+### LLM Providers
 
-* OpenAI Support
-* Ollama Support
-* Anthropic Support
+* OpenAI
+* Ollama
+* Anthropic
+* Gemini
 
 ### Semantic Engine
 
@@ -145,13 +160,14 @@ The long-term goal is to provide a complete platform for building reliable, audi
 * Reasoning
 * Prompt Templates
 * Context Management
+* Structured Generation
 
 ### Hybrid Execution
 
 * Deterministic Control Flow
 * Semantic Decision Making
 
-**Goal:** Enable intelligent agent reasoning.
+**Goal:** Enable intelligent and controllable agent reasoning.
 
 ---
 
@@ -164,6 +180,7 @@ The long-term goal is to provide a complete platform for building reliable, audi
 * Session Memory
 * Long-Term Memory
 * Vector Memory
+* Shared Agent Memory
 
 ### Retrieval
 
@@ -174,6 +191,8 @@ The long-term goal is to provide a complete platform for building reliable, audi
 ### Persistence
 
 * Local Storage
+* SQLite
+* PostgreSQL
 * External Vector Databases
 
 **Goal:** Enable persistent, context-aware agents.
@@ -184,23 +203,25 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 ## Multi-Agent Platform
 
-### Agent Communication
+### Communication
 
 * Messages
 * Channels
 * Events
+* Agent Discovery
 
 ### Coordination
 
 * Agent Workflows
 * Shared Memory
 * Agent Orchestration
+* Human-in-the-Loop Support
 
 ### Distributed Execution
 
-* Agent Networking
 * Remote Agents
 * Service Discovery
+* Networked Agents
 
 **Goal:** Enable collaborative AI systems.
 
@@ -208,9 +229,9 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 # v0.8.0 Beta
 
-## Developer Experience
+## Developer Ecosystem
 
-### Ecosystem
+### Package Management
 
 * Package Registry
 * Dependency Resolution
@@ -222,13 +243,14 @@ The long-term goal is to provide a complete platform for building reliable, audi
 * Language Server Protocol (LSP)
 * Syntax Highlighting
 * Autocomplete
+* Diagnostics
 
 ### Developer Tools
 
 * Formatter
 * Linter
-* Project Templates
 * Playground
+* Project Templates
 
 **Goal:** Improve developer productivity and adoption.
 
@@ -242,6 +264,7 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 * Compiler Optimizations
 * Runtime Optimizations
+* Workflow Optimizations
 
 ### Reliability
 
@@ -251,11 +274,11 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 ### Deployment
 
-* Deployment Tooling
 * Docker Support
 * CI/CD Integration
+* Deployment Tooling
 
-**Goal:** Prepare for stable release.
+**Goal:** Prepare Srishti for production use.
 
 ---
 
@@ -282,8 +305,8 @@ The long-term goal is to provide a complete platform for building reliable, audi
 ### Enterprise Features
 
 * Policy Engine
-* Audit Trails
 * Governance Framework
+* Audit Trails
 * Compliance Modules
 
 ### Support
@@ -296,21 +319,27 @@ The long-term goal is to provide a complete platform for building reliable, audi
 
 # Beyond v1.0
 
-### Srishti Cloud
+## Srishti Cloud
 
 * Hosted Agent Runtime
-* Agent Monitoring
 * Managed Memory
 * Managed Semantic Engine
+* Agent Monitoring
 
-### Srishti Registry
+## Srishti Registry
 
 * Agent Marketplace
 * Package Registry
 * Shared Policies
+* Workflow Templates
 
-### Srishti Enterprise
+## Srishti Enterprise
 
 * Governance Layer
-* Compliance Packs
 * Enterprise Agent Platform
+* Compliance Packs
+* Enterprise Security
+
+## Long-Term Vision
+
+Enable developers to build, deploy, govern, and scale AI agents using a language-native approach instead of framework-centric orchestration.
