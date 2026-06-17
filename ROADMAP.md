@@ -2,163 +2,315 @@
 
 ## Vision
 
-Srishti is an Agent-Oriented Programming Language (AOPL) that treats AI agents as first-class language primitives and compiles them into deterministic Rust systems with semantic execution capabilities.
+Srishti is an Agent-Oriented Programming Language (AOPL) that treats AI agents as first-class language primitives and compiles them into deterministic execution systems with semantic reasoning capabilities.
+
+The long-term goal is to provide a complete platform for building reliable, auditable, memory-aware, and multi-agent AI applications.
 
 ---
 
 # v0.1.0 Alpha ✅
 
-### Compiler Foundation
+## Compiler Foundation
 
 * Lexer
 * Parser
 * AST Generation
 * Rust Code Generation
 * Initial Agent Syntax
+* Basic Compiler Architecture
 
-Released
+**Status:** Released
 
 ---
 
 # v0.2.0 Alpha ✅
 
-### Language Evolution
+## Language & Toolchain Foundation
 
-* Updated Agent-Oriented Syntax
-* Improved Parser Support
-* Enhanced AST Generation
-* Improved Rust Code Generation
-* CLI-based File Compilation
-* Documentation System
-* Example Programs
-* Project Roadmap
+### Language Features
 
-Released
+* Agent Definitions
+* Memory Declarations
+* Tool Definitions
+* Guardrails
+* Intents
+
+### Toolchain
+
+* CLI Commands
+
+  * `srishti run`
+  * `srishti build`
+  * `srishti check`
+  * `srishti init`
+  * `srishti install`
+  * `srishti fmt`
+
+### Runtime Foundation
+
+* Tree-Walking Interpreter
+* Event Bus
+* Agent Lifecycle Management
+* Mock Semantic Engine
+* OpenAI Provider Foundation
+* Ollama Provider Foundation
+
+### Project System
+
+* Workspace Support
+* Project Manifests (`srishti.toml`)
+* Module Resolution Foundation
+* Standard Library Foundation
+
+**Status:** Released
 
 ---
 
 # v0.3.0 Alpha 🚧
 
-### Type System & Validation
+## Language Correctness & Safety
 
-* Primitive Types
+### Type System
 
-  * Float
-  * String
-  * Boolean
-* Type Checking
+* Float
+* String
+* Boolean
+* Structured Types
+
+### Compiler Validation
+
 * Semantic Validation
 * Symbol Resolution
 * Scope Analysis
-* Better Compiler Diagnostics
-* Error Reporting
+* Duplicate Definition Detection
 
-Goal:
-Catch language and logic errors before Rust code generation.
+### Diagnostics
+
+* Source Spans
+* Error Recovery
+* Compiler Warnings
+* Rich Diagnostic Messages
+
+### Testing
+
+* Lexer Tests
+* Parser Tests
+* Typechecker Tests
+* Interpreter Tests
+
+**Goal:** Catch language and logic errors before execution.
 
 ---
 
 # v0.4.0 Alpha
 
-### Runtime Engine
+## Policy Engine & Structured Execution
 
-* Runtime Execution Engine
-* Tool Invocation Framework
-* Agent Lifecycle Management
-* Structured Outputs
+### Policy System
+
+* Policy Definitions
+* Compliance Rules
+* Runtime Enforcement
+* Audit Logs
+
+### Structured Outputs
+
+* JSON Outputs
+* Schema Validation
+* Typed Responses
+
+### Runtime Improvements
+
+* Better Tool Execution
 * Runtime Configuration
+* Execution Tracing
 
-Goal:
-Execute compiled agents directly.
+**Goal:** Make AI agents safe, predictable, and auditable.
 
 ---
 
 # v0.5.0 Alpha
 
+## Semantic Intelligence
+
+### LLM Integration
+
+* OpenAI Support
+* Ollama Support
+* Anthropic Support
+
 ### Semantic Engine
 
-* LLM Provider Integration
-* Semantic Reasoning Engine
-* Planning System
+* Planning
+* Reasoning
 * Prompt Templates
-* Hybrid Deterministic + Semantic Execution
+* Context Management
 
-Goal:
-Enable intelligent agent reasoning.
+### Hybrid Execution
+
+* Deterministic Control Flow
+* Semantic Decision Making
+
+**Goal:** Enable intelligent agent reasoning.
 
 ---
 
 # v0.6.0 Alpha
 
-### Memory System
+## Memory Platform
 
-* Vector Memory
-* Long-Term Memory
+### Memory Types
+
 * Session Memory
-* Retrieval APIs
-* Memory Persistence
+* Long-Term Memory
+* Vector Memory
 
-Goal:
-Provide durable agent memory.
+### Retrieval
+
+* Embeddings
+* Similarity Search
+* Knowledge Retrieval
+
+### Persistence
+
+* Local Storage
+* External Vector Databases
+
+**Goal:** Enable persistent, context-aware agents.
 
 ---
 
 # v0.7.0 Alpha
 
-### Multi-Agent Platform
+## Multi-Agent Platform
 
-* Agent Communication
-* Agent Networking
+### Agent Communication
+
+* Messages
+* Channels
+* Events
+
+### Coordination
+
+* Agent Workflows
 * Shared Memory
-* Agent Coordination
-* Event-Driven Workflows
+* Agent Orchestration
 
-Goal:
-Enable collaborative AI systems.
+### Distributed Execution
+
+* Agent Networking
+* Remote Agents
+* Service Discovery
+
+**Goal:** Enable collaborative AI systems.
 
 ---
 
 # v0.8.0 Beta
 
-### Developer Experience
+## Developer Experience
 
-* Package Manager
-* Module System
-* Import / Export Support
+### Ecosystem
+
+* Package Registry
+* Dependency Resolution
+* Version Management
+
+### Tooling
+
 * VS Code Extension
 * Language Server Protocol (LSP)
-* Project Templates
+* Syntax Highlighting
+* Autocomplete
 
-Goal:
-Improve developer productivity.
+### Developer Tools
+
+* Formatter
+* Linter
+* Project Templates
+* Playground
+
+**Goal:** Improve developer productivity and adoption.
 
 ---
 
 # v0.9.0 Release Candidate
 
-### Production Readiness
+## Production Readiness
+
+### Optimization
 
 * Compiler Optimizations
-* Security Improvements
-* Testing Framework
-* Performance Tuning
-* Deployment Tooling
+* Runtime Optimizations
 
-Goal:
-Prepare for stable release.
+### Reliability
+
+* Security Auditing
+* Performance Tuning
+* Load Testing
+
+### Deployment
+
+* Deployment Tooling
+* Docker Support
+* CI/CD Integration
+
+**Goal:** Prepare for stable release.
 
 ---
 
 # v1.0.0 Stable
 
-### Production Release
+## Production Agent Platform
+
+### Language
 
 * Stable Language Specification
+* Backward Compatibility
+
+### Runtime
+
 * Production Runtime
+* Enterprise Runtime Features
+
+### Deployment
+
 * WASM Target
 * Cloud Deployment Support
-* Enterprise Features
+* Container Deployment
+
+### Enterprise Features
+
+* Policy Engine
+* Audit Trails
+* Governance Framework
+* Compliance Modules
+
+### Support
+
 * Long-Term Support (LTS)
 
-Goal:
-Production-ready Agent-Oriented Programming Language.
+**Goal:** Production-ready Agent-Oriented Programming Language.
+
+---
+
+# Beyond v1.0
+
+### Srishti Cloud
+
+* Hosted Agent Runtime
+* Agent Monitoring
+* Managed Memory
+* Managed Semantic Engine
+
+### Srishti Registry
+
+* Agent Marketplace
+* Package Registry
+* Shared Policies
+
+### Srishti Enterprise
+
+* Governance Layer
+* Compliance Packs
+* Enterprise Agent Platform
