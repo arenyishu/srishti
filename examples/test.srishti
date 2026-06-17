@@ -1,0 +1,6 @@
+agent TestAgent {
+
+    intent hello {
+        achieve "Say hello"
+    }
+}
