@@ -125,8 +125,22 @@ impl LLMProvider for MockProvider {
         prompt: &str,
         _context: &HashMap<String, Value>,
     ) -> Result<String, anyhow::Error> {
-        println!("  [MockLLM] Processing: {}", prompt);
-        Ok(format!("Mock response for: {}", prompt))
+        println!("    [SemanticEngine] Reasoning about: \"{}\"", prompt);
+        
+        let response = if prompt.contains("Classify ticket") {
+            "Decision: Category is 'Refund'. Route to RefundAgent."
+        } else if prompt.contains("Process refund requests") {
+            "Response: \"I have processed your $50 refund. It should appear on your statement in 3-5 days.\""
+        } else if prompt.contains("Handle high-risk situations") {
+            "Action: Escalating ticket to human support tier 2."
+        } else {
+            "Mock response processed successfully."
+        };
+        
+        // Simulate LLM latency
+        tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+        println!("    [SemanticEngine] Output: {}", response);
+        Ok(response.to_string())
     }
 
     async fn structured_output(

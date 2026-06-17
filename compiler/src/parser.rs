@@ -419,6 +419,31 @@ impl Parser {
             }
         }
 
+        // Handle function call on the identifier itself (e.g., classify_ticket())
+        if self.peek_token() == Some(Token::OpenParen) {
+            if let Expression::Variable(name) = expr.clone() {
+                self.expect(Token::OpenParen)?;
+                let mut args = Vec::new();
+                while self.peek_token() != Some(Token::CloseParen) && self.peek_token() != Some(Token::EOF) {
+                    args.push(self.parse_expression()?);
+                    if self.peek_token() == Some(Token::Comma) {
+                        self.advance();
+                    }
+                }
+                self.expect(Token::CloseParen)?;
+                
+                // Represent function call as a method call on a dummy object, or just a special AST node?
+                // Wait, Srishti AST doesn't have FunctionCall. I'll just use a Variable, but the parser will consume the parens, 
+                // OR I can use a MethodCall where object is the Variable.
+                // Let's use a MethodCall with object=Variable("self"), method=name.
+                expr = Expression::MethodCall {
+                    object: Box::new(Expression::Variable("self".to_string())),
+                    method: name,
+                    args,
+                };
+            }
+        }
+
         Ok(expr)
     }
 
