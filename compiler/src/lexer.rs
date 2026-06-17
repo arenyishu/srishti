@@ -4,41 +4,30 @@ use std::str::Chars;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Agent,
-    Intent,
+    Memory,
     Tool,
     Guardrail,
-    Achieve,
-    Extract,
-    From,
-    Let,
-    Persistent,
-    Memory,
+    Intent,
     Assert,
+    Achieve,
     Else,
-    Trigger,
-    Return,
     
     Identifier(String),
     StringLiteral(String),
     FloatLiteral(f64),
-    IntLiteral(i64),
     
     Colon,
-    Semicolon,
-    Comma,
-    Arrow, // ->
-    Equals,
-    LessThan,
-    LessThanOrEqual,
-    GreaterThan,
-    GreaterThanOrEqual,
-    
     OpenBrace,
     CloseBrace,
     OpenParen,
     CloseParen,
-    OpenBracket,
-    CloseBracket,
+    
+    OpLessThanOrEqual,
+    OpGreaterThanOrEqual,
+    OpLessThan,
+    OpGreaterThan,
+    OpEquals,
+    OpNotEquals,
     
     EOF,
 }
@@ -62,85 +51,94 @@ impl<'a> Lexer<'a> {
         self.input.peek()
     }
 
-    fn skip_whitespace(&mut self) {
-        while let Some(&c) = self.peek() {
-            if c.is_whitespace() {
-                self.advance();
-            } else {
-                break;
+    fn skip_whitespace_and_comments(&mut self) {
+        loop {
+            match self.peek() {
+                Some(&c) if c.is_whitespace() => {
+                    self.advance();
+                }
+                Some(&'/') => {
+                    self.advance();
+                    if self.peek() == Some(&'/') {
+                        while let Some(ch) = self.advance() {
+                            if ch == '\n' { break; }
+                        }
+                    } else {
+                        // In a real lexer we'd handle single slash. Here we panic for simplicity if unexpected.
+                        panic!("Unexpected single /");
+                    }
+                }
+                _ => break,
             }
         }
     }
 
-    pub fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
+    pub fn next_token(&mut self) -> Result<Token, String> {
+        self.skip_whitespace_and_comments();
 
         if let Some(&c) = self.peek() {
             match c {
-                '{' => { self.advance(); Token::OpenBrace }
-                '}' => { self.advance(); Token::CloseBrace }
-                '(' => { self.advance(); Token::OpenParen }
-                ')' => { self.advance(); Token::CloseParen }
-                '<' => { 
-                    self.advance(); 
-                    if self.peek() == Some(&'=') {
-                        self.advance();
-                        Token::LessThanOrEqual
-                    } else {
-                        Token::LessThan 
-                    }
-                }
-                '>' => { 
-                    self.advance(); 
-                    if self.peek() == Some(&'=') {
-                        self.advance();
-                        Token::GreaterThanOrEqual
-                    } else {
-                        Token::GreaterThan 
-                    }
-                }
-                ':' => { self.advance(); Token::Colon }
-                ';' => { self.advance(); Token::Semicolon }
-                ',' => { self.advance(); Token::Comma }
-                '=' => { self.advance(); Token::Equals }
-                '-' => {
+                '{' => { self.advance(); Ok(Token::OpenBrace) }
+                '}' => { self.advance(); Ok(Token::CloseBrace) }
+                '(' => { self.advance(); Ok(Token::OpenParen) }
+                ')' => { self.advance(); Ok(Token::CloseParen) }
+                ':' => { self.advance(); Ok(Token::Colon) }
+                '<' => {
                     self.advance();
-                    if self.peek() == Some(&'>') {
+                    if self.peek() == Some(&'=') {
                         self.advance();
-                        Token::Arrow
+                        Ok(Token::OpLessThanOrEqual)
                     } else {
-                        panic!("Unexpected token '-'");
+                        Ok(Token::OpLessThan)
+                    }
+                }
+                '>' => {
+                    self.advance();
+                    if self.peek() == Some(&'=') {
+                        self.advance();
+                        Ok(Token::OpGreaterThanOrEqual)
+                    } else {
+                        Ok(Token::OpGreaterThan)
+                    }
+                }
+                '=' => {
+                    self.advance();
+                    if self.peek() == Some(&'=') {
+                        self.advance();
+                        Ok(Token::OpEquals)
+                    } else {
+                        Err("Expected ==, got =".to_string())
+                    }
+                }
+                '!' => {
+                    self.advance();
+                    if self.peek() == Some(&'=') {
+                        self.advance();
+                        Ok(Token::OpNotEquals)
+                    } else {
+                        Err("Expected !=, got !".to_string())
                     }
                 }
                 '"' => {
-                    self.advance(); // consume open quote
+                    self.advance(); // consume quote
                     let mut string = String::new();
                     while let Some(ch) = self.advance() {
                         if ch == '"' { break; }
                         string.push(ch);
                     }
-                    Token::StringLiteral(string)
+                    Ok(Token::StringLiteral(string))
                 }
                 c if c.is_ascii_digit() => {
                     let mut num = String::new();
-                    let mut is_float = false;
                     while let Some(&ch) = self.peek() {
-                        if ch.is_ascii_digit() {
-                            num.push(ch);
-                            self.advance();
-                        } else if ch == '.' {
-                            is_float = true;
+                        if ch.is_ascii_digit() || ch == '.' {
                             num.push(ch);
                             self.advance();
                         } else {
                             break;
                         }
                     }
-                    if is_float {
-                        Token::FloatLiteral(num.parse().unwrap())
-                    } else {
-                        Token::IntLiteral(num.parse().unwrap())
-                    }
+                    Ok(Token::FloatLiteral(num.parse().unwrap_or(0.0)))
                 }
                 c if c.is_alphabetic() || c == '_' => {
                     let mut ident = String::new();
@@ -153,53 +151,36 @@ impl<'a> Lexer<'a> {
                         }
                     }
                     match ident.as_str() {
-                        "agent" => Token::Agent,
-                        "intent" => Token::Intent,
-                        "tool" => Token::Tool,
-                        "guardrail" => Token::Guardrail,
-                        "achieve" => Token::Achieve,
-                        "extract" => Token::Extract,
-                        "from" => Token::From,
-                        "let" => Token::Let,
-                        "persistent" => Token::Persistent,
-                        "memory" => Token::Memory,
-                        "assert" => Token::Assert,
-                        "else" => Token::Else,
-                        "trigger" => Token::Trigger,
-                        "return" => Token::Return,
-                        _ => Token::Identifier(ident),
-                    }
-                }
-                '/' => {
-                    self.advance();
-                    if self.peek() == Some(&'/') {
-                        while let Some(ch) = self.advance() {
-                            if ch == '\n' { break; }
-                        }
-                        self.next_token()
-                    } else {
-                        panic!("Unexpected character: /");
+                        "agent" => Ok(Token::Agent),
+                        "memory" => Ok(Token::Memory),
+                        "tool" => Ok(Token::Tool),
+                        "guardrail" => Ok(Token::Guardrail),
+                        "intent" => Ok(Token::Intent),
+                        "assert" => Ok(Token::Assert),
+                        "achieve" => Ok(Token::Achieve),
+                        "else" => Ok(Token::Else),
+                        _ => Ok(Token::Identifier(ident)),
                     }
                 }
                 _ => {
-                    panic!("Unexpected character: {}", c);
+                    Err(format!("Unexpected character: {}", c))
                 }
             }
         } else {
-            Token::EOF
+            Ok(Token::EOF)
         }
     }
-    
-    pub fn tokenize(&mut self) -> Vec<Token> {
+
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, String> {
         let mut tokens = Vec::new();
         loop {
-            let tok = self.next_token();
+            let tok = self.next_token()?;
             if tok == Token::EOF {
                 tokens.push(tok);
                 break;
             }
             tokens.push(tok);
         }
-        tokens
+        Ok(tokens)
     }
 }

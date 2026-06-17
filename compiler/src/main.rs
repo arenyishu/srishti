@@ -1,33 +1,35 @@
 use srishti_compiler::lexer::Lexer;
 use srishti_compiler::parser::Parser;
 use srishti_compiler::codegen::Codegen;
+use std::env;
+use std::fs;
 
 fn main() {
-    println!("Srishti Compiler - Agent-Oriented Programming");
-
-    let source = r#"
-agent SupportAgent {
-    persistent memory user_history: Vector<Ticket>;
-
-    tool issue_refund(amount: Float) {
-        // deterministic block
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 3 || args[1] != "run" {
+        eprintln!("Usage: srishti run <file.srishti>");
+        std::process::exit(1);
     }
 
-    guardrail limit(amount: Float) {
-        assert amount <= 100 else "trigger human_fallback";
-    }
+    let filepath = &args[2];
+    let source = match fs::read_to_string(filepath) {
+        Ok(content) => content,
+        Err(err) => {
+            eprintln!("Error reading file {}: {}", filepath, err);
+            std::process::exit(1);
+        }
+    };
 
-    intent handle_ticket() {
-        let decision = achieve "Find the best flight under $500";
-    }
-}
-"#;
+    println!("Compiling Srishti File: {}", filepath);
 
-    println!("Compiling Srishti Source:\n{}", source);
-
-    let mut lexer = Lexer::new(source);
-    let tokens = lexer.tokenize();
-    // println!("Tokens: {:#?}", tokens);
+    let mut lexer = Lexer::new(&source);
+    let tokens = match lexer.tokenize() {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("Lexer error: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     let mut parser = Parser::new(tokens);
     match parser.parse() {
@@ -36,10 +38,14 @@ agent SupportAgent {
             let codegen = Codegen::new();
             let rust_code = codegen.generate(&program);
             
-            println!("\nGenerated Rust Code:\n{}", rust_code);
+            // Output to console for now, as it's easier to verify
+            println!("\n// ---------------- Generated Rust Code ---------------- //\n");
+            println!("{}", rust_code);
+            println!("// ----------------------------------------------------- //\n");
         }
         Err(e) => {
             eprintln!("Parse error: {}", e);
+            std::process::exit(1);
         }
     }
 }

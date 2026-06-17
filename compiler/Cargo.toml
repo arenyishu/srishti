@@ -4,7 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 
+[[bin]]
+name = "srishti"
+path = "src/main.rs"
+
 [dependencies]
-# We will use simple regex or handwritten tokenization for the lexer
 regex = "1.10"
 anyhow = "1.0"

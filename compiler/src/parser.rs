@@ -11,12 +11,12 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    fn peek(&self) -> Option<&Token> {
-        self.tokens.get(self.current)
+    fn peek(&self) -> Option<Token> {
+        self.tokens.get(self.current).cloned()
     }
 
     fn advance(&mut self) -> Option<Token> {
-        let t = self.peek().cloned();
+        let t = self.peek();
         self.current += 1;
         t
     }
@@ -32,10 +32,10 @@ impl Parser {
             Err(format!("Expected {:?}, got EOF", expected))
         }
     }
-    
+
     fn expect_ident(&mut self) -> Result<String, String> {
         if let Some(Token::Identifier(id)) = self.advance() {
-            Ok(id.clone())
+            Ok(id)
         } else {
             Err("Expected identifier".to_string())
         }
@@ -53,11 +53,10 @@ impl Parser {
                 _ => return Err(format!("Unexpected top level token {:?}", t)),
             }
         }
-        
         Ok(Program { agents })
     }
 
-    fn parse_agent(&mut self) -> Result<Agent, String> {
+    fn parse_agent(&mut self) -> Result<AgentDecl, String> {
         self.expect(Token::Agent)?;
         let name = self.expect_ident()?;
         self.expect(Token::OpenBrace)?;
@@ -65,103 +64,169 @@ impl Parser {
         let mut tools = Vec::new();
         let mut guardrails = Vec::new();
         let mut intents = Vec::new();
-        let mut persistent_memory = Vec::new();
+        let mut memories = Vec::new();
 
         while let Some(t) = self.peek() {
-            if *t == Token::CloseBrace {
+            if t == Token::CloseBrace {
                 self.advance();
                 break;
             }
-            
             match t {
+                Token::Memory => memories.push(self.parse_memory()?),
                 Token::Intent => intents.push(self.parse_intent()?),
                 Token::Tool => tools.push(self.parse_tool()?),
                 Token::Guardrail => guardrails.push(self.parse_guardrail()?),
-                Token::Persistent => persistent_memory.push(self.parse_persistent_memory()?),
                 _ => return Err(format!("Unexpected token inside agent: {:?}", t)),
             }
         }
-        
-        Ok(Agent {
-            name,
-            tools,
-            guardrails,
-            intents,
-            persistent_memory,
-        })
-    }
-    
-    // Stub methods to keep it brief for MVP
-    fn parse_intent(&mut self) -> Result<Intent, String> {
-        self.expect(Token::Intent)?;
-        let name = self.expect_ident()?;
-        self.expect(Token::OpenParen)?;
-        while let Some(t) = self.peek() {
-            if *t == Token::CloseParen { break; }
-            self.advance();
-        }
-        self.expect(Token::CloseParen)?;
-        self.expect(Token::OpenBrace)?;
-        while let Some(t) = self.peek() {
-            if *t == Token::CloseBrace { break; }
-            self.advance();
-        }
-        self.expect(Token::CloseBrace)?; 
-        Ok(Intent { name, args: vec![], body: vec![] })
+        Ok(AgentDecl { name, tools, guardrails, intents, memories })
     }
 
-    fn parse_tool(&mut self) -> Result<Tool, String> {
-        self.expect(Token::Tool)?;
-        let name = self.expect_ident()?;
-        self.expect(Token::OpenParen)?;
-        while let Some(t) = self.peek() {
-            if *t == Token::CloseParen { break; }
-            self.advance();
-        }
-        self.expect(Token::CloseParen)?;
-        self.expect(Token::OpenBrace)?;
-        while let Some(t) = self.peek() {
-            if *t == Token::CloseBrace { break; }
-            self.advance();
-        }
-        self.expect(Token::CloseBrace)?; 
-        Ok(Tool { name, args: vec![], return_type: None, body: vec![] })
-    }
-
-    fn parse_guardrail(&mut self) -> Result<Guardrail, String> {
-        self.expect(Token::Guardrail)?;
-        let name = self.expect_ident()?;
-        self.expect(Token::OpenParen)?;
-        while let Some(t) = self.peek() {
-            if *t == Token::CloseParen { break; }
-            self.advance();
-        }
-        self.expect(Token::CloseParen)?;
-        self.expect(Token::OpenBrace)?;
-        while let Some(t) = self.peek() {
-            if *t == Token::CloseBrace { break; }
-            self.advance();
-        }
-        self.expect(Token::CloseBrace)?; 
-        Ok(Guardrail { name, args: vec![], body: vec![] })
-    }
-
-    fn parse_persistent_memory(&mut self) -> Result<Statement, String> {
-        self.expect(Token::Persistent)?;
+    fn parse_memory(&mut self) -> Result<MemoryDecl, String> {
         self.expect(Token::Memory)?;
         let name = self.expect_ident()?;
-        self.expect(Token::Colon)?;
-        self.expect_ident()?; // type
-        self.expect(Token::LessThan)?;
-        self.expect_ident()?; // inner type
-        self.expect(Token::GreaterThan)?;
-        self.expect(Token::Semicolon)?;
+        Ok(MemoryDecl { name })
+    }
+
+    fn parse_type(&mut self) -> Result<Type, String> {
+        let t = self.expect_ident()?;
+        match t.as_str() {
+            "Float" => Ok(Type::Float),
+            "String" => Ok(Type::String),
+            "Boolean" => Ok(Type::Boolean),
+            "Integer" => Ok(Type::Integer),
+            _ => Ok(Type::Custom(t)),
+        }
+    }
+
+    fn parse_args(&mut self) -> Result<Vec<Argument>, String> {
+        self.expect(Token::OpenParen)?;
+        let mut args = Vec::new();
+        while let Some(t) = self.peek() {
+            if t == Token::CloseParen {
+                self.advance();
+                break;
+            }
+            let name = self.expect_ident()?;
+            self.expect(Token::Colon)?;
+            let typ = self.parse_type()?;
+            args.push(Argument { name, typ });
+            // normally would handle commas, for this MVP we might just loop
+        }
+        Ok(args)
+    }
+
+    fn parse_tool(&mut self) -> Result<ToolDecl, String> {
+        self.expect(Token::Tool)?;
+        let name = self.expect_ident()?;
+        let args = self.parse_args()?;
         
-        Ok(Statement::LetDecl {
-            name,
-            is_persistent: true,
-            var_type: None, // skip parsing type detail for stub
-            value: None,
-        })
+        let mut body = None;
+        if self.peek() == Some(Token::OpenBrace) {
+            self.advance();
+            // skip contents for MVP, except CloseBrace
+            while let Some(t) = self.peek() {
+                if t == Token::CloseBrace {
+                    self.advance();
+                    break;
+                }
+                self.advance();
+            }
+            body = Some(vec![]);
+        }
+
+        Ok(ToolDecl { name, args, body })
+    }
+
+    fn parse_guardrail(&mut self) -> Result<GuardrailDecl, String> {
+        self.expect(Token::Guardrail)?;
+        let name = self.expect_ident()?;
+        let args = self.parse_args()?;
+        self.expect(Token::OpenBrace)?;
+        
+        let mut body = Vec::new();
+        while let Some(t) = self.peek() {
+            if t == Token::CloseBrace {
+                self.advance();
+                break;
+            }
+            if t == Token::Assert {
+                body.push(self.parse_assert()?);
+            } else {
+                return Err(format!("Unexpected token inside guardrail: {:?}", t));
+            }
+        }
+        Ok(GuardrailDecl { name, args, body })
+    }
+
+    fn parse_assert(&mut self) -> Result<Statement, String> {
+        self.expect(Token::Assert)?;
+        let left = self.parse_expression()?;
+        let op = self.parse_operator()?;
+        let right = self.parse_expression()?;
+        
+        let condition = Expression::BinaryOp {
+            left: Box::new(left),
+            op,
+            right: Box::new(right),
+        };
+
+        let mut else_action = None;
+        if self.peek() == Some(Token::Else) {
+            self.advance();
+            if let Some(Token::StringLiteral(s)) = self.advance() {
+                else_action = Some(s);
+            } else {
+                return Err("Expected string literal after else".to_string());
+            }
+        }
+
+        Ok(Statement::Assert { condition, else_action })
+    }
+
+    fn parse_operator(&mut self) -> Result<String, String> {
+        match self.advance() {
+            Some(Token::OpLessThanOrEqual) => Ok("<=".to_string()),
+            Some(Token::OpGreaterThanOrEqual) => Ok(">=".to_string()),
+            Some(Token::OpLessThan) => Ok("<".to_string()),
+            Some(Token::OpGreaterThan) => Ok(">".to_string()),
+            Some(Token::OpEquals) => Ok("==".to_string()),
+            Some(Token::OpNotEquals) => Ok("!=".to_string()),
+            _ => Err("Expected comparison operator".to_string()),
+        }
+    }
+
+    fn parse_expression(&mut self) -> Result<Expression, String> {
+        match self.advance() {
+            Some(Token::Identifier(id)) => Ok(Expression::Variable(id)),
+            Some(Token::FloatLiteral(f)) => Ok(Expression::LiteralFloat(f)),
+            Some(Token::StringLiteral(s)) => Ok(Expression::LiteralString(s)),
+            _ => Err("Expected expression".to_string()),
+        }
+    }
+
+    fn parse_intent(&mut self) -> Result<IntentDecl, String> {
+        self.expect(Token::Intent)?;
+        let name = self.expect_ident()?;
+        self.expect(Token::OpenBrace)?;
+        
+        let mut body = Vec::new();
+        while let Some(t) = self.peek() {
+            if t == Token::CloseBrace {
+                self.advance();
+                break;
+            }
+            if t == Token::Achieve {
+                self.advance(); // consume 'achieve'
+                if let Some(Token::StringLiteral(s)) = self.advance() {
+                    body.push(Statement::Achieve { goal: s });
+                } else {
+                    return Err("Expected string literal after achieve".to_string());
+                }
+            } else {
+                return Err(format!("Unexpected token inside intent: {:?}", t));
+            }
+        }
+        Ok(IntentDecl { name, body })
     }
 }
