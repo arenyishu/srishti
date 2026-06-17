@@ -1,0 +1,22 @@
+[project]
+name = "srishti-examples"
+version = "0.1.0"
+entry = "examples/support_agent.srishti"
+authors = ["Srishti Contributors"]
+
+[agents]
+sources = ["examples/**/*.srishti"]
+
+[dependencies]
+# Package dependencies (coming soon)
+# srishti-http = "0.1"
+# srishti-db = { git = "https://github.com/srishti-lang/srishti-db" }
+
+[runtime]
+provider = "mock"           # "openai" | "gemini" | "ollama" | "mock"
+model = "gpt-4o"            # Default model for semantic engine
+memory_backend = "in-memory" # "in-memory" | "qdrant" | "chromadb"
+
+[build]
+output = "build/"           # Generated code output directory
+target = "binary"           # "binary" | "library" | "wasm"

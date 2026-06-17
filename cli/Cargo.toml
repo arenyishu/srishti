@@ -1,0 +1,17 @@
+[package]
+name = "srishti-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "srishti"
+path = "src/main.rs"
+
+[dependencies]
+srishti-compiler = { path = "../compiler" }
+srishti-runtime = { path = "../runtime" }
+clap = { version = "4.5", features = ["derive"] }
+toml = "0.8"
+colored = "2.1"
+anyhow = "1.0"
