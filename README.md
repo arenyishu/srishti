@@ -1,37 +1,63 @@
 # Srishti
 
-Srishti is an Agent-Oriented Programming Language (AOPL) designed to build reliable AI systems through deterministic execution, semantic reasoning, memory, and guardrails.
+**Agent-Oriented Programming Language (AOPL)**
 
-Unlike orchestration frameworks that treat agents as runtime abstractions, Srishti makes agents a first-class language primitive and compiles them into executable Rust systems.
+Srishti is an experimental programming language designed specifically for AI agents.
+
+Instead of treating agents as runtime abstractions inside frameworks, Srishti makes **Agents** a first-class language primitive and compiles them into deterministic Rust systems.
 
 ---
 
-## Why Srishti?
+## Vision
 
 Modern AI applications are typically built using:
 
-* Prompt chains
-* Agent frameworks
-* Workflow graphs
-* Orchestration layers
+* Prompt Chains
+* Agent Frameworks
+* Workflow Graphs
+* Orchestration Layers
 
-These approaches often lack strong typing, validation, and compile-time guarantees.
+These approaches often lack:
 
-Srishti introduces a programming language specifically designed for AI agents.
-
-### Key Principles
-
-* Agents are first-class citizens
-* Deterministic execution in Rust
-* Semantic reasoning through LLMs
-* Built-in memory primitives
-* Built-in guardrails
 * Compile-time validation
-* Strongly typed agent interfaces
+* Strong typing
+* Deterministic execution
+* Native memory abstractions
+* Built-in safety mechanisms
+
+Srishti aims to provide a language-level solution for building reliable AI systems.
 
 ---
 
-## Example
+## Core Principles
+
+### Agents as First-Class Citizens
+
+Agents are defined directly in the language.
+
+### Deterministic Execution
+
+Generated Rust code provides predictable execution.
+
+### Semantic Reasoning
+
+Future runtime integration will enable LLM-powered reasoning.
+
+### Built-in Memory
+
+Memory becomes a language primitive rather than an external component.
+
+### Guardrails
+
+Safety constraints are defined directly in source code.
+
+### Compile-Time Validation
+
+Errors should be detected before runtime whenever possible.
+
+---
+
+# Example
 
 ```srishti
 agent SupportAgent {
@@ -52,7 +78,7 @@ agent SupportAgent {
 
 ---
 
-## Compiler Pipeline
+# Compiler Pipeline
 
 ```text
 Srishti Source
@@ -78,7 +104,7 @@ Runtime
 
 ---
 
-## Architecture
+# Architecture
 
 ```text
 +-------------------+
@@ -108,28 +134,28 @@ Runtime
 
 ---
 
-## Language Concepts
+# Language Concepts
 
-### Agent
+## Agent
 
 ```srishti
 agent TravelAgent {
 }
 ```
 
-### Memory
+## Memory
 
 ```srishti
 memory user_preferences
 ```
 
-### Tool
+## Tool
 
 ```srishti
 tool search_flights(destination: String)
 ```
 
-### Guardrail
+## Guardrail
 
 ```srishti
 guardrail budget_limit(amount: Float) {
@@ -137,7 +163,7 @@ guardrail budget_limit(amount: Float) {
 }
 ```
 
-### Intent
+## Intent
 
 ```srishti
 intent book_trip {
@@ -147,7 +173,44 @@ intent book_trip {
 
 ---
 
-## Project Structure
+# Current Features (v0.2.0 Alpha)
+
+Implemented:
+
+* Lexer
+* Parser
+* AST Generation
+* Rust Code Generation
+* CLI-based Compilation
+* Agent Definitions
+* Memory Declarations
+* Tool Definitions
+* Guardrails
+* Intents
+* Example Programs
+* Documentation
+
+---
+
+# Usage
+
+Compile a Srishti source file:
+
+```bash
+cargo run -- examples/support_agent.srishti
+```
+
+Example output:
+
+```text
+Compiling Srishti file...
+AST successfully parsed.
+Generated Rust code.
+```
+
+---
+
+# Project Structure
 
 ```text
 srishti/
@@ -162,25 +225,23 @@ srishti/
 
 ---
 
-## Examples
+# Examples
 
 ### Support Agent
 
-```bash
+```text
 examples/support_agent.srishti
 ```
 
 ### Travel Agent
 
-```bash
+```text
 examples/travel_agent.srishti
 ```
 
 ---
 
-## Documentation
-
-Documentation can be found in:
+# Documentation
 
 ```text
 docs/
@@ -191,60 +252,71 @@ docs/
 
 ---
 
-## Roadmap
+# Roadmap
 
-### v0.1.0 Alpha ✅
-
-* Lexer
-* Parser
-* AST
-* Rust Code Generation
-* CLI Prototype
-
-### v0.2.0
+## v0.3.0 Alpha
 
 * Type System
 * Semantic Validation
+* Symbol Resolution
 * Compiler Diagnostics
-* Improved Runtime Integration
 
-### v0.3.0
+## v0.4.0 Alpha
 
-* Memory Engine
-* Event System
-* Multi-Agent Workflows
-
-### v0.4.0
-
-* OpenAI Integration
-* Anthropic Integration
+* Runtime Engine
 * Structured Outputs
+* Runtime Configuration
 
-### v1.0.0
+## v0.5.0 Alpha
+
+* Semantic Engine
+* LLM Integration
+* Planning Framework
+
+## v0.6.0 Alpha
+
+* Memory System
+* Persistent Memory
+* Retrieval APIs
+
+## v0.7.0 Alpha
+
+* Multi-Agent Workflows
+* Agent Communication
+* Event System
+
+## v1.0.0 Stable
 
 * Production Runtime
-* Optimizer
 * Package Manager
 * WASM Target
+* Optimization Passes
+* Stable Language Specification
 
 ---
 
-## Current Status
+# Status
 
-Srishti is currently an experimental language prototype under active development.
+Current Version:
 
-The compiler successfully parses agent definitions and generates Rust code.
+**Srishti v0.2.0 Alpha**
+
+Status:
+
+**Experimental / Research Project**
+
+The compiler can successfully parse agent definitions and generate Rust code.
 
 ---
 
-## Contributing
+# Contributing
 
 Contributions, feedback, issues, and design discussions are welcome.
 
-Please open an Issue before proposing large language changes.
+Please open an issue before proposing major language changes.
 
 ---
 
-## License
+# License
 
 Apache License 2.0
