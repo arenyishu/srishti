@@ -19,31 +19,31 @@ pub struct ProjectConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct RuntimeConfig {
-    pub provider: String,
-    pub model: String,
-    pub memory_backend: String,
+    pub provider: Option<String>,
+    pub model: Option<String>,
+    pub memory_backend: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct BuildConfig {
-    pub output: String,
-    pub target: String,
+    pub output: Option<String>,
+    pub target: Option<String>,
 }
 
 pub fn find_project_root() -> Option<PathBuf> {
     let mut current = std::env::current_dir().ok()?;
-    
+
     loop {
         let manifest_path = current.join("srishti.toml");
         if manifest_path.exists() {
             return Some(current);
         }
-        
+
         if !current.pop() {
             break;
         }
     }
-    
+
     None
 }
 

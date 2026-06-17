@@ -4,8 +4,9 @@ use std::path::Path;
 
 pub fn execute(name: Option<&str>) {
     let project_name = name.unwrap_or("srishti-project");
-    
-    let toml_content = format!(r#"[project]
+
+    let toml_content = format!(
+        r#"[project]
 name = "{}"
 version = "0.1.0"
 entry = "src/main.srishti"
@@ -24,7 +25,9 @@ memory_backend = "in-memory"
 [build]
 output = "build/"
 target = "binary"
-"#, project_name);
+"#,
+        project_name
+    );
 
     let hello_agent = r#"agent HelloAgent {
     intent say_hello {
@@ -55,5 +58,9 @@ srishti_modules/
     fs::write(".gitignore", gitignore).expect("Failed to write .gitignore");
     println!("{} .gitignore", "Created".green().bold());
 
-    println!("\n{} {} initialized.", "Successfully".green().bold(), project_name);
+    println!(
+        "\n{} {} initialized.",
+        "Successfully".green().bold(),
+        project_name
+    );
 }

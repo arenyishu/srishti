@@ -15,7 +15,7 @@ impl Interpreter {
             "mock"
         };
         let api_key = std::env::var("OPENAI_API_KEY").unwrap_or_default();
-        
+
         Self {
             semantic_engine: SemanticEngine::new(api_key, provider.to_string()),
         }
@@ -55,7 +55,10 @@ impl Interpreter {
                 println!("   💡 LLM Output: {}", response);
                 Ok(())
             }
-            Statement::Assert { condition, else_action } => {
+            Statement::Assert {
+                condition,
+                else_action,
+            } => {
                 println!("   🔍 Evaluating Assert: {:?}", condition);
                 // In a full interpreter, we would evaluate the AST expression.
                 // For Phase 3 MVP, we just acknowledge it.
@@ -65,9 +68,18 @@ impl Interpreter {
                 Ok(())
             }
             Statement::RawRust(code) => {
-                println!("   🦀 (Skipping Raw Rust block during Interpretation: {})", code);
+                println!(
+                    "   🦀 (Skipping Raw Rust block during Interpretation: {})",
+                    code
+                );
                 Ok(())
             }
         }
+    }
+}
+
+impl Default for Interpreter {
+    fn default() -> Self {
+        Self::new()
     }
 }

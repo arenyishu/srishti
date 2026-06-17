@@ -1,5 +1,5 @@
-use crate::semantic_engine::SemanticEngine;
 use crate::memory::VectorMemory;
+use crate::semantic_engine::SemanticEngine;
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -72,7 +72,7 @@ impl AgentInstance {
                 VectorMemory::new(&format!("{}_{}", config.name, collection)),
             );
         }
-        
+
         Self {
             name: config.name,
             state: AgentState::Initializing,
@@ -83,7 +83,7 @@ impl AgentInstance {
             context: HashMap::new(),
         }
     }
-    
+
     /// Create a mock agent for testing
     pub fn mock(name: &str) -> Self {
         Self {
@@ -96,38 +96,59 @@ impl AgentInstance {
             context: HashMap::new(),
         }
     }
-    
+
     /// Transition to Ready state
     pub fn initialize(&mut self) {
         println!("  [Agent:{}] Initializing...", self.name);
         self.state = AgentState::Ready;
         println!("  [Agent:{}] State -> {}", self.name, self.state);
     }
-    
+
     /// Execute an intent using the semantic engine
-    pub async fn execute_intent(&mut self, intent_name: &str, goal: &str) -> Result<Value, anyhow::Error> {
+    pub async fn execute_intent(
+        &mut self,
+        intent_name: &str,
+        goal: &str,
+    ) -> Result<Value, anyhow::Error> {
         self.state = AgentState::Running;
-        println!("  [Agent:{}] Executing intent '{}': {}", self.name, intent_name, goal);
-        
+        println!(
+            "  [Agent:{}] Executing intent '{}': {}",
+            self.name, intent_name, goal
+        );
+
         let result = self.semantic_engine.achieve(goal, &self.context).await?;
-        
+
         println!("  [Agent:{}] Intent '{}' completed", self.name, intent_name);
         self.state = AgentState::Ready;
         Ok(result)
     }
-    
+
     /// Run a guardrail check
-    pub fn check_guardrail(&self, guardrail_name: &str, condition: bool, error_msg: &str) -> GuardrailResult {
-        println!("  [Agent:{}] Checking guardrail '{}'", self.name, guardrail_name);
+    pub fn check_guardrail(
+        &self,
+        guardrail_name: &str,
+        condition: bool,
+        error_msg: &str,
+    ) -> GuardrailResult {
+        println!(
+            "  [Agent:{}] Checking guardrail '{}'",
+            self.name, guardrail_name
+        );
         if condition {
-            println!("  [Agent:{}] Guardrail '{}' -> PASS", self.name, guardrail_name);
+            println!(
+                "  [Agent:{}] Guardrail '{}' -> PASS",
+                self.name, guardrail_name
+            );
             GuardrailResult::Pass
         } else {
-            println!("  [Agent:{}] Guardrail '{}' -> FAIL: {}", self.name, guardrail_name, error_msg);
+            println!(
+                "  [Agent:{}] Guardrail '{}' -> FAIL: {}",
+                self.name, guardrail_name, error_msg
+            );
             GuardrailResult::Fail(error_msg.to_string())
         }
     }
-    
+
     /// Send a message to another agent
     pub fn send_message(&mut self, to: &str, content: Value, message_type: &str) {
         let msg = AgentMessage {
@@ -139,18 +160,21 @@ impl AgentInstance {
         println!("  [Agent:{}] Sending {} to {}", self.name, message_type, to);
         self.outbox.push(msg);
     }
-    
+
     /// Receive a message
     pub fn receive_message(&mut self, msg: AgentMessage) {
-        println!("  [Agent:{}] Received {} from {}", self.name, msg.message_type, msg.from);
+        println!(
+            "  [Agent:{}] Received {} from {}",
+            self.name, msg.message_type, msg.from
+        );
         self.inbox.push(msg);
     }
-    
+
     /// Get a memory collection
     pub fn memory(&self, name: &str) -> Option<&VectorMemory> {
         self.memories.get(name)
     }
-    
+
     /// Add memory collection
     pub fn add_memory(&mut self, name: &str) {
         self.memories.insert(
@@ -158,12 +182,12 @@ impl AgentInstance {
             VectorMemory::new(&format!("{}_{}", self.name, name)),
         );
     }
-    
+
     /// Set context value
     pub fn set_context(&mut self, key: &str, value: Value) {
         self.context.insert(key.to_string(), value);
     }
-    
+
     /// Mark as done
     pub fn finish(&mut self) {
         self.state = AgentState::Done;

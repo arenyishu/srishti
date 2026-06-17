@@ -9,7 +9,12 @@ pub fn execute(filepath: &str) {
     let source = match fs::read_to_string(filepath) {
         Ok(content) => content,
         Err(err) => {
-            eprintln!("{} reading file {}: {}", "Error".red().bold(), filepath, err);
+            eprintln!(
+                "{} reading file {}: {}",
+                "Error".red().bold(),
+                filepath,
+                err
+            );
             std::process::exit(1);
         }
     };

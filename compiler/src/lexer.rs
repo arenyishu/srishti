@@ -11,24 +11,24 @@ pub enum Token {
     Assert,
     Achieve,
     Else,
-    
+
     Identifier(String),
     StringLiteral(String),
     FloatLiteral(f64),
-    
+
     Colon,
     OpenBrace,
     CloseBrace,
     OpenParen,
     CloseParen,
-    
+
     OpLessThanOrEqual,
     OpGreaterThanOrEqual,
     OpLessThan,
     OpGreaterThan,
     OpEquals,
     OpNotEquals,
-    
+
     EOF,
 }
 
@@ -61,7 +61,9 @@ impl<'a> Lexer<'a> {
                     self.advance();
                     if self.peek() == Some(&'/') {
                         while let Some(ch) = self.advance() {
-                            if ch == '\n' { break; }
+                            if ch == '\n' {
+                                break;
+                            }
                         }
                     } else {
                         // In a real lexer we'd handle single slash. Here we panic for simplicity if unexpected.
@@ -78,11 +80,26 @@ impl<'a> Lexer<'a> {
 
         if let Some(&c) = self.peek() {
             match c {
-                '{' => { self.advance(); Ok(Token::OpenBrace) }
-                '}' => { self.advance(); Ok(Token::CloseBrace) }
-                '(' => { self.advance(); Ok(Token::OpenParen) }
-                ')' => { self.advance(); Ok(Token::CloseParen) }
-                ':' => { self.advance(); Ok(Token::Colon) }
+                '{' => {
+                    self.advance();
+                    Ok(Token::OpenBrace)
+                }
+                '}' => {
+                    self.advance();
+                    Ok(Token::CloseBrace)
+                }
+                '(' => {
+                    self.advance();
+                    Ok(Token::OpenParen)
+                }
+                ')' => {
+                    self.advance();
+                    Ok(Token::CloseParen)
+                }
+                ':' => {
+                    self.advance();
+                    Ok(Token::Colon)
+                }
                 '<' => {
                     self.advance();
                     if self.peek() == Some(&'=') {
@@ -123,7 +140,9 @@ impl<'a> Lexer<'a> {
                     self.advance(); // consume quote
                     let mut string = String::new();
                     while let Some(ch) = self.advance() {
-                        if ch == '"' { break; }
+                        if ch == '"' {
+                            break;
+                        }
                         string.push(ch);
                     }
                     Ok(Token::StringLiteral(string))
@@ -162,9 +181,7 @@ impl<'a> Lexer<'a> {
                         _ => Ok(Token::Identifier(ident)),
                     }
                 }
-                _ => {
-                    Err(format!("Unexpected character: {}", c))
-                }
+                _ => Err(format!("Unexpected character: {}", c)),
             }
         } else {
             Ok(Token::EOF)

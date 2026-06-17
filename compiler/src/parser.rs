@@ -43,7 +43,7 @@ impl Parser {
 
     pub fn parse(&mut self) -> Result<Program, String> {
         let mut agents = Vec::new();
-        
+
         while let Some(t) = self.peek() {
             match t {
                 Token::Agent => {
@@ -60,7 +60,7 @@ impl Parser {
         self.expect(Token::Agent)?;
         let name = self.expect_ident()?;
         self.expect(Token::OpenBrace)?;
-        
+
         let mut tools = Vec::new();
         let mut guardrails = Vec::new();
         let mut intents = Vec::new();
@@ -79,7 +79,13 @@ impl Parser {
                 _ => return Err(format!("Unexpected token inside agent: {:?}", t)),
             }
         }
-        Ok(AgentDecl { name, tools, guardrails, intents, memories })
+        Ok(AgentDecl {
+            name,
+            tools,
+            guardrails,
+            intents,
+            memories,
+        })
     }
 
     fn parse_memory(&mut self) -> Result<MemoryDecl, String> {
@@ -120,7 +126,7 @@ impl Parser {
         self.expect(Token::Tool)?;
         let name = self.expect_ident()?;
         let args = self.parse_args()?;
-        
+
         let mut body = None;
         if self.peek() == Some(Token::OpenBrace) {
             self.advance();
@@ -143,7 +149,7 @@ impl Parser {
         let name = self.expect_ident()?;
         let args = self.parse_args()?;
         self.expect(Token::OpenBrace)?;
-        
+
         let mut body = Vec::new();
         while let Some(t) = self.peek() {
             if t == Token::CloseBrace {
@@ -164,7 +170,7 @@ impl Parser {
         let left = self.parse_expression()?;
         let op = self.parse_operator()?;
         let right = self.parse_expression()?;
-        
+
         let condition = Expression::BinaryOp {
             left: Box::new(left),
             op,
@@ -181,7 +187,10 @@ impl Parser {
             }
         }
 
-        Ok(Statement::Assert { condition, else_action })
+        Ok(Statement::Assert {
+            condition,
+            else_action,
+        })
     }
 
     fn parse_operator(&mut self) -> Result<String, String> {
@@ -209,7 +218,7 @@ impl Parser {
         self.expect(Token::Intent)?;
         let name = self.expect_ident()?;
         self.expect(Token::OpenBrace)?;
-        
+
         let mut body = Vec::new();
         while let Some(t) = self.peek() {
             if t == Token::CloseBrace {

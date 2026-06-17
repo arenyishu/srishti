@@ -6,7 +6,7 @@ mod project;
 
 #[derive(Parser)]
 #[command(name = "srishti")]
-#[command(about = "Srishti Agent-Oriented Programming Language", long_about = None)]
+#[command(version, about = "Srishti Agent-Oriented Programming Language", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -86,5 +86,8 @@ fn print_banner() {
 |____/|_|  |_|___/_| |_|\__|_|
 "#;
     println!("{}", banner.cyan().bold());
-    println!("{}", "Srishti v0.1.0 — Agent-Oriented Programming Language\n".green());
+    println!(
+        "{}",
+        "Srishti v0.1.0 — Agent-Oriented Programming Language\n".green()
+    );
 }

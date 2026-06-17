@@ -41,7 +41,7 @@ impl EventBus {
             event_log: Arc::new(RwLock::new(Vec::new())),
         }
     }
-    
+
     /// Subscribe to an event
     pub fn on<F>(&self, event_name: &str, callback: F)
     where
@@ -50,20 +50,23 @@ impl EventBus {
         let mut handlers = self.handlers.write().unwrap();
         handlers
             .entry(event_name.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(Box::new(callback));
         println!("  [EventBus] Registered handler for '{}'", event_name);
     }
-    
+
     /// Emit an event
     pub fn emit(&self, event: Event) {
-        println!("  [EventBus] Emitting '{}' from {}", event.name, event.source);
-        
+        println!(
+            "  [EventBus] Emitting '{}' from {}",
+            event.name, event.source
+        );
+
         // Log the event
         if let Ok(mut log) = self.event_log.write() {
             log.push(event.clone());
         }
-        
+
         // Call handlers
         if let Ok(handlers) = self.handlers.read() {
             if let Some(callbacks) = handlers.get(&event.name) {
@@ -73,12 +76,15 @@ impl EventBus {
             }
         }
     }
-    
+
     /// Get event history
     pub fn history(&self) -> Vec<Event> {
-        self.event_log.read().unwrap_or_else(|e| e.into_inner()).clone()
+        self.event_log
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
-    
+
     /// Clear all handlers and history
     pub fn clear(&self) {
         if let Ok(mut handlers) = self.handlers.write() {
