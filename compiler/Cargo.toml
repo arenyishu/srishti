@@ -7,3 +7,4 @@ authors.workspace = true
 [dependencies]
 regex = "1.10"
 anyhow = "1.0"
+srishti-runtime = { path = "../runtime" }

@@ -34,7 +34,7 @@ impl Codegen {
             
             // guardrails
             for gr in &agent.guardrails {
-                let args_str: Vec<String> = gr.args.iter().map(|a| format!("{}: {:?}", a.name, a.typ)).collect();
+                let _args_str: Vec<String> = gr.args.iter().map(|a| format!("{}: {:?}", a.name, a.typ)).collect();
                 // for MVP let's just make args f64 for Float etc
                 let typed_args: Vec<String> = gr.args.iter().map(|a| {
                     let rtyp = match a.typ {
