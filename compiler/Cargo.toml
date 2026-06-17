@@ -1,0 +1,10 @@
+[package]
+name = "srishti-compiler"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+# We will use simple regex or handwritten tokenization for the lexer
+regex = "1.10"
+anyhow = "1.0"
