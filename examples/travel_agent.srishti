@@ -1,0 +1,14 @@
+agent TravelAgent {
+
+    memory user_preferences
+
+    tool search_flights(destination: String)
+
+    guardrail budget_limit(amount: Float) {
+        assert amount <= 500
+    }
+
+    intent book_trip {
+        achieve "Find best flight under budget"
+    }
+}
