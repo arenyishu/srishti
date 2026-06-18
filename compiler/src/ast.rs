@@ -65,12 +65,27 @@ pub enum Statement {
         event_name: String,
         args: Vec<Expression>,
     },
+    AllowRole {
+        role: String,
+    },
     ExprStmt(Expression),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MemoryDecl {
     pub name: String,
+    pub scope: Option<String>,
+    pub retention: Option<String>,
+    pub deletion: Option<String>,
+    pub encryption: Option<String>,
+    pub index: Option<String>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PolicyDecl {
+    pub name: String,
+    pub body: Vec<Statement>,
     pub span: Span,
 }
 
@@ -153,6 +168,10 @@ pub struct EventHandler {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AgentDecl {
     pub name: String,
+    pub id: Option<String>,
+    pub role: Option<String>,
+    pub permissions: Vec<String>,
+    pub secrets: Vec<String>,
     pub memories: Vec<MemoryDecl>,
     pub tools: Vec<ToolDecl>,
     pub guardrails: Vec<GuardrailDecl>,
@@ -166,6 +185,7 @@ pub struct AgentDecl {
 pub struct Program {
     pub imports: Vec<ImportDecl>,
     pub messages: Vec<MessageDecl>,
+    pub policies: Vec<PolicyDecl>,
     pub agents: Vec<AgentDecl>,
     pub workflows: Vec<WorkflowDecl>,
     pub span: Span,

@@ -57,6 +57,7 @@ impl Parser {
         let mut agents = Vec::new();
         let mut imports = Vec::new();
         let mut messages = Vec::new();
+        let mut policies = Vec::new();
         let mut workflows = Vec::new();
         let start_span = self.current_span();
 
@@ -64,6 +65,7 @@ impl Parser {
             match t.token {
                 Token::Import => imports.push(self.parse_import()?),
                 Token::Message => messages.push(self.parse_message()?),
+                Token::Policy => policies.push(self.parse_policy()?),
                 Token::Workflow => workflows.push(self.parse_workflow()?),
                 Token::Agent => agents.push(self.parse_agent()?),
                 Token::EOF => break,
@@ -79,6 +81,7 @@ impl Parser {
         Ok(Program {
             imports,
             messages,
+            policies,
             agents,
             workflows,
             span: Span::new(start_span.line, start_span.column, start_span.offset),
@@ -178,11 +181,43 @@ impl Parser {
         Ok(WorkflowDecl { name, steps, span: start_span })
     }
 
+    fn parse_policy(&mut self) -> Result<PolicyDecl, String> {
+        let span = self.expect(Token::Policy)?;
+        let (name, _) = self.expect_ident()?;
+        self.expect(Token::OpenBrace)?;
+        let body = self.parse_statements()?;
+        Ok(PolicyDecl { name, body, span })
+    }
+
+    fn parse_dotted_ident(&mut self) -> Result<String, String> {
+        let mut res = String::new();
+        let (id, _) = self.expect_ident()?;
+        res.push_str(&id);
+        while self.peek_token() == Some(Token::Dot) {
+            self.advance();
+            let (id, _) = self.expect_ident()?;
+            res.push('.');
+            res.push_str(&id);
+        }
+        Ok(res)
+    }
+
     fn parse_agent(&mut self) -> Result<AgentDecl, String> {
         let start_span = self.expect(Token::Agent)?;
         let (name, _) = self.expect_ident()?;
+        
+        let mut role = None;
+        if self.peek_token() == Some(Token::Role) {
+            self.advance();
+            let (r, _) = self.expect_ident()?;
+            role = Some(r);
+        }
+        
         self.expect(Token::OpenBrace)?;
 
+        let mut id = None;
+        let mut permissions = Vec::new();
+        let mut secrets = Vec::new();
         let mut tools = Vec::new();
         let mut guardrails = Vec::new();
         let mut intents = Vec::new();
@@ -196,6 +231,25 @@ impl Parser {
                 break;
             }
             match t.token {
+                Token::Id => {
+                    self.advance();
+                    self.expect(Token::Colon)?;
+                    if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
+                        id = Some(s);
+                    } else {
+                        return Err("Expected string literal for id".to_string());
+                    }
+                }
+                Token::Permission => {
+                    self.advance();
+                    permissions.push(self.parse_dotted_ident()?);
+                }
+                Token::Use => {
+                    self.advance();
+                    self.expect(Token::Secret)?;
+                    let (sec, _) = self.expect_ident()?;
+                    secrets.push(sec);
+                }
                 Token::Memory => memories.push(self.parse_memory()?),
                 Token::Intent => intents.push(self.parse_intent()?),
                 Token::Tool => tools.push(self.parse_tool()?),
@@ -207,6 +261,10 @@ impl Parser {
         }
         Ok(AgentDecl {
             name,
+            id,
+            role,
+            permissions,
+            secrets,
             tools,
             guardrails,
             intents,
@@ -265,7 +323,63 @@ impl Parser {
     fn parse_memory(&mut self) -> Result<MemoryDecl, String> {
         let span = self.expect(Token::Memory)?;
         let (name, _) = self.expect_ident()?;
-        Ok(MemoryDecl { name, span })
+        
+        let mut scope = None;
+        let mut retention = None;
+        let mut deletion = None;
+        let mut encryption = None;
+        let mut index = None;
+
+        if self.peek_token() == Some(Token::OpenBrace) {
+            self.expect(Token::OpenBrace)?;
+            while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+                let t = self.peek_token().unwrap();
+                match t {
+                    Token::Scope => {
+                        self.advance();
+                        self.expect(Token::Colon)?;
+                        let (val, _) = self.expect_ident()?;
+                        scope = Some(val);
+                    }
+                    Token::Retention => {
+                        self.advance();
+                        self.expect(Token::Colon)?;
+                        if let Some(SpannedToken { token: Token::IntegerLiteral(n), .. }) = self.advance() {
+                            if let Some(SpannedToken { token: Token::Identifier(id), .. }) = self.peek() {
+                                self.advance(); // consume it
+                                retention = Some(format!("{}{}", n, id));
+                            } else {
+                                retention = Some(n.to_string());
+                            }
+                        } else {
+                            return Err("Expected integer literal for retention".to_string());
+                        }
+                    }
+                    Token::Deletion => {
+                        self.advance();
+                        self.expect(Token::Colon)?;
+                        let (val, _) = self.expect_ident()?;
+                        deletion = Some(val);
+                    }
+                    Token::Encryption => {
+                        self.advance();
+                        self.expect(Token::Colon)?;
+                        let val = self.parse_dotted_ident()?; // handles aes_256_gcm (which is actually just identifiers with underscores, expect_ident handles it!)
+                        encryption = Some(val);
+                    }
+                    Token::Index => {
+                        self.advance();
+                        self.expect(Token::Colon)?;
+                        let (val, _) = self.expect_ident()?;
+                        index = Some(val);
+                    }
+                    _ => return Err(format!("Unexpected token in memory block: {:?}", t)),
+                }
+            }
+            self.expect(Token::CloseBrace)?;
+        }
+
+        Ok(MemoryDecl { name, scope, retention, deletion, encryption, index, span })
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
@@ -506,6 +620,12 @@ impl Parser {
                     then_body,
                     else_body,
                 })
+            }
+            Some(Token::Allow) => {
+                self.advance();
+                self.expect(Token::Role)?;
+                let (role, _) = self.expect_ident()?;
+                Ok(Statement::AllowRole { role })
             }
             Some(Token::Achieve) => {
                 self.advance();

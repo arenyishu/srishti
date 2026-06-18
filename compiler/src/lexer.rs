@@ -25,6 +25,7 @@ pub enum Token {
     Agent, Memory, Tool, Guardrail, Intent, Assert, Achieve, Else,
     Import, From, As, Workflow, Message, Channel, On, Emit,
     State, Transition, Fn, Let, Return, If, True, False,
+    Policy, Role, Permission, Use, Secret, Id, Scope, Retention, Deletion, Encryption, Index, Allow,
     
     Identifier(String),
     StringLiteral(String),
@@ -222,6 +223,18 @@ impl<'a> Lexer<'a> {
                         "if" => Token::If,
                         "true" => Token::True,
                         "false" => Token::False,
+                        "policy" => Token::Policy,
+                        "role" => Token::Role,
+                        "permission" => Token::Permission,
+                        "use" => Token::Use,
+                        "secret" => Token::Secret,
+                        "id" => Token::Id,
+                        "scope" => Token::Scope,
+                        "retention" => Token::Retention,
+                        "deletion" => Token::Deletion,
+                        "encryption" => Token::Encryption,
+                        "index" => Token::Index,
+                        "allow" => Token::Allow,
                         _ => Token::Identifier(ident),
                     }
                 }
