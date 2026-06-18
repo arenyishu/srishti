@@ -31,6 +31,6 @@ agent QAAgent {
 }
 
 workflow TicketPipeline {
-    step classify -> SupportAgent.resolve_ticket
-    step verify -> QAAgent.verify_resolution
+    classify -> SupportAgent.resolve_ticket
+    verify -> QAAgent.verify_resolution
 }

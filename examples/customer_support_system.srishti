@@ -1,0 +1,103 @@
+message Ticket {
+    customer_id: String
+    issue: String
+}
+
+policy RefundApproval {
+    require_human_approval_above(100)
+}
+
+policy FinanceAccess {
+    allow role Financial
+}
+
+agent RouterAgent {
+    intent classify_ticket {
+        achieve "Classify ticket into Billing, Technical, Refund, or General"
+    }
+
+    on start_chat {
+        IO.print("Booting Customer Support System...")
+        // Creating a mock ticket for the demonstration
+        let mock_ticket = "CUST-9921"
+        emit ticket_received(mock_ticket)
+    }
+
+    on ticket_received(ticket: String) {
+        IO.print("Received new support ticket.")
+        let category = classify_ticket()
+        
+        // MVP: We assume the LLM classified it as Refund
+        emit route_to_refund(ticket)
+    }
+}
+
+agent BillingAgent {
+    memory customer_history
+
+    intent handle_billing {
+        achieve "Handle billing issues and access customer memory"
+    }
+
+    on route_to_billing(ticket: Ticket) {
+        handle_billing()
+    }
+}
+
+agent TechnicalAgent {
+    intent handle_technical {
+        achieve "Handle technical problems and suggest solutions"
+    }
+
+    on route_to_technical(ticket: Ticket) {
+        handle_technical()
+        emit escalate_to_human(ticket)
+    }
+}
+
+agent RefundAgent {
+    id: "refund-service"
+    permission payment.read
+    permission payment.write
+    use secret OPENAI_API_KEY
+    use secret STRIPE_API_KEY
+
+    memory refund_history {
+        scope: global
+        retention: 30d
+        deletion: hard_purge
+        encryption: aes_256_gcm
+        index: vector
+    }
+
+    guardrail refund_limit(amount: Float) {
+        assert amount <= 100
+    }
+
+    intent process_refund {
+        achieve "Process refund requests and generate response"
+    }
+
+    on route_to_refund(ticket: String) {
+        IO.print("Refund Agent evaluating request...")
+        let amount = 50.0
+        refund_limit(amount)
+        
+        refund_history.store(ticket, amount)
+        let response = process_refund()
+        IO.print(response)
+        emit escalate_to_human(ticket)
+    }
+}
+
+agent EscalationAgent {
+    intent handle_escalation {
+        achieve "Handle high-risk situations and handoff to human"
+    }
+
+    on escalate_to_human(ticket: String) {
+        let result = handle_escalation()
+        IO.print(result)
+        IO.print("System Shutdown.")
+    }
+}
