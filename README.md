@@ -1,10 +1,23 @@
 # Srishti
 
-### Agent-Oriented Programming Language (AOPL)
+## Agent Runtime Platform for Reliable AI Systems
 
-Srishti is an experimental Agent-Oriented Programming Language (AOPL) for building reliable, auditable, and scalable AI systems.
+Srishti is an experimental Agent Runtime Platform for Reliable AI Systems, powered by an Agent-Oriented Programming Language (AOPL).
 
-Instead of treating agents as runtime abstractions inside frameworks, Srishti makes **Agents first-class language primitives** and provides a complete toolchain including a compiler, interpreter, runtime, memory system, guardrails, workflows, and semantic execution engines.
+Instead of treating agents as runtime abstractions inside frameworks, Srishti makes **Agents first-class platform primitives** and provides a complete toolchain for building reliable, auditable, and scalable AI systems.
+
+Srishti combines:
+
+* Agent-Oriented Programming Language (AOPL)
+* Compiler & Code Generation
+* Runtime Execution Engine
+* Event-Driven Agent Coordination
+* Memory Systems
+* Guardrails & Safety Controls
+* Multi-Agent Workflows
+* Semantic Reasoning Engines
+
+The long-term vision is to provide the foundational runtime layer for AI-native software systems.
 
 ---
 
@@ -16,18 +29,13 @@ Modern AI applications are typically built using:
 * Agent Frameworks
 * Workflow Graphs
 * Orchestration Layers
+* Memory Databases
+* Monitoring Systems
+* Policy Engines
 
-While powerful, these approaches often require large amounts of framework-specific code and often lack:
+While powerful, these approaches often require multiple disconnected tools and large amounts of framework-specific code.
 
-* Compile-time validation
-* Strong typing
-* Deterministic execution
-* Built-in memory abstractions
-* Policy enforcement
-* Safety guardrails
-* Native multi-agent workflows
-
-Srishti explores a language-first approach where agents, memory, workflows, and guardrails are built directly into the language.
+Srishti explores a platform-first approach where agents, memory, workflows, guardrails, and semantic execution are native capabilities rather than external integrations.
 
 ---
 
@@ -35,231 +43,54 @@ Srishti explores a language-first approach where agents, memory, workflows, and 
 
 ### Agents as First-Class Citizens
 
-Agents are language primitives rather than framework objects.
+Agents are native platform primitives rather than framework objects.
 
 ### Deterministic + Semantic Execution
 
-Business logic remains deterministic while semantic reasoning is delegated to LLM-powered engines.
+Business logic remains deterministic while reasoning tasks are delegated to semantic engines.
+
+### Event-Driven Architecture
+
+Agents communicate through events and workflows.
 
 ### Built-in Memory
 
-Memory is declared directly in source code.
+Memory is declared and managed by the platform.
 
-### Guardrails
+### Guardrails & Safety
 
-Safety constraints are enforced as part of the language.
+Safety constraints are enforced through runtime validation and guardrails.
 
-### Workflows
+### Reliable AI Systems
 
-Agent collaboration is a native language feature.
+AI systems should be observable, testable, auditable, and governable.
 
-### Compile-Time Validation
+### Multi-Agent Coordination
 
-Errors should be detected before runtime whenever possible.
-
----
-
-## Example
-
-```srishti
-agent SupportAgent {
-
-    memory ticket_history
-
-    tool refund(amount: Float)
-
-    guardrail refund_limit(amount: Float) {
-        assert amount <= 100
-    }
-
-    intent resolve_ticket {
-        achieve "Find best resolution"
-    }
-}
-```
-
----
-
-## Customer Support System Demo
-
-Srishti includes an end-to-end customer support automation example demonstrating:
-
-* Multi-Agent Workflows
-* Memory
-* Guardrails
-* Event-Driven Communication
-* Semantic Reasoning
-* Agent Lifecycle Management
-
-Example workflow:
-
-```srishti
-workflow CustomerSupport {
-    RouterAgent -> RefundAgent
-    RouterAgent -> BillingAgent
-    RouterAgent -> TechnicalAgent
-
-    RefundAgent -> EscalationAgent
-}
-```
-
-Run the demo:
-
-```bash
-srishti run examples/customer_support_system.srishti
-```
-
-The runtime demonstrates:
-
-* Agent boot sequence
-* Workflow execution
-* Event routing
-* Guardrail validation
-* Memory operations
-* Semantic engine execution
-* Escalation handling
-
----
-
-## Toolchain
-
-```bash
-srishti init my-project
-srishti check src/main.srishti
-srishti run src/main.srishti
-srishti build
-srishti install
-```
-
----
-
-## Current Features
-
-### Language
-
-* Agents
-* Memory
-* Tools
-* Guardrails
-* Intents
-* Workflows
-* Messages
-* Events
-* Imports
-
-### Compiler
-
-* Lexer
-* Parser
-* AST Generation
-* Type Checking Foundation
-* Semantic Validation
-* Diagnostics
-* Rust Code Generation
-
-### Runtime
-
-* Tree-Walking Interpreter
-* Agent Lifecycle Management
-* Event Bus
-* Memory System
-* OpenAI Provider Foundation
-* Ollama Provider Foundation
-* Mock Provider
-
-### CLI
-
-* `srishti init`
-* `srishti run`
-* `srishti build`
-* `srishti check`
-* `srishti install`
-* `srishti fmt`
-
-### Standard Library
-
-* std/http
-* std/json
-* std/logging
-* std/io
-
----
-
-## Project Structure
-
-```text
-srishti/
-├── cli/
-├── compiler/
-├── runtime/
-├── std/
-├── examples/
-├── docs/
-└── LICENSE
-```
-
----
-
-## Examples
-
-```bash
-srishti run examples/support_agent.srishti
-srishti run examples/travel_agent.srishti
-srishti run examples/chatbot.srishti
-srishti run examples/multi_agent_workflow.srishti
-srishti run examples/customer_support_system.srishti
-```
-
----
-
-## Roadmap
-
-### v0.3.0 Alpha
-
-* Advanced Type System
-* Policy Engine
-* Structured Outputs
-* Enhanced Diagnostics
-
-### v0.4.0 Alpha
-
-* Persistent Memory
-* Retrieval APIs
-* Vector Storage
-
-### v0.5.0 Alpha
-
-* Multi-Agent Networking
-* Distributed Execution
-* Workflow Engine
-
-### v1.0.0 Stable
-
-* Production Runtime
-* Enterprise Policy System
-* WASM Target
-* Stable Language Specification
+Workflows and collaboration are native platform capabilities.
 
 ---
 
 ## Current Status
 
-**Version:** v0.2.0 Alpha
+**Version:** Srishti v0.3.0 – Prarambh
 
-Srishti is an experimental research language under active development.
+*"The Beginning of Reliable AI Systems"*
+
+Prarambh represents the transition of Srishti from an experimental compiler into an executable Agent Runtime Platform.
 
 Current capabilities include:
 
 * Compiler
 * Interpreter
-* Runtime Foundation
-* Multi-Agent Workflows
+* Runtime Execution Engine
 * Event System
+* Agent Lifecycle Management
+* Multi-Agent Workflows
+* Memory Foundation
 * Semantic Engine Foundation
+* OpenAI Integration
+* Ollama Integration Foundation
 * Customer Support System Demonstration
 
----
-
-## License
-
-Apache License 2.0
+Srishti is currently an experimental research platform under active development.
