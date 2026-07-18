@@ -67,5 +67,10 @@ You can interact with the Srishti OS using its built-in CLI tool.
 # Check the status of your Srishti project code
 cargo run --bin srishti -- check
 
-# (Other CLI commands for deployment, process monitoring, and execution will be documented here as the OS evolves)
+# Start the Srishti OS Telemetry & Control Dashboard
+cargo run --bin srishti -- dashboard
 ```
+
+Once the dashboard server is running, you can access the real-time UI to monitor your agents, process tables, memory allocations, and Event Bus activity.
+
+*(Other CLI commands for deployment, process monitoring, and execution will be documented here as the OS evolves)*
