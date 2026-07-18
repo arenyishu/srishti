@@ -1,0 +1,18 @@
+syntax = "proto3";
+package agent_rpc;
+
+service AgentService {
+    rpc SendIntent (IntentRequest) returns (IntentResponse);
+}
+
+message IntentRequest {
+    string agent_name = 1;
+    string intent_name = 2;
+    string payload_json = 3;
+}
+
+message IntentResponse {
+    string status = 1;
+    string result_json = 2;
+    string error_message = 3;
+}

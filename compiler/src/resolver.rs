@@ -40,7 +40,7 @@ impl ModuleResolver {
         let tokens = lexer.tokenize().map_err(|e| format!("Lex error in {:?}: {}", path, e))?;
 
         let mut parser = crate::parser::Parser::new(tokens);
-        let mut program = parser.parse().map_err(|e| format!("Parse error in {:?}: {}", path, e))?;
+        let program = parser.parse().map_err(|e| format!("Parse error in {:?}: {}", path, e))?;
 
         // Recursively resolve imports
         for import in &program.imports {

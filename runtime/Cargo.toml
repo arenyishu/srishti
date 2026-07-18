@@ -11,7 +11,24 @@ serde_json = "1.0"
 reqwest = { version = "0.12", features = ["json"] }
 anyhow = "1.0"
 async-trait = "0.1"
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1.0", features = ["v4"] }
+tonic = { version = "0.10", features = ["tls", "tls-roots"] }
+tonic-health = "0.10"
+tower = { version = "0.4", features = ["retry", "timeout"] }
+prost = "0.12"
+tokio-stream = "0.1"
 log = "0.4"
 google-genai = "0.0.2"
 colored = "3.1.1"
+tokio-cron-scheduler = "0.15.1"
+aes-gcm = "0.10.3"
+ring = "0.17.14"
+chrono = "0.4.45"
+base64 = "0.22.1"
+rand = "0.10.1"
+rcgen = "0.12"
+rustls-pemfile = "2.1"
+hex = "0.4.3"
+
+[build-dependencies]
+tonic-build = "0.10"

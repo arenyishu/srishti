@@ -1,5 +1,0 @@
-agent HelloAgent {
-    intent say_hello {
-        achieve "Say hello to the world!"
-    }
-}

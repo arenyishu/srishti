@@ -1,0 +1,15 @@
+agent HeavyAgent {
+    quota {
+        memory_mb: 512
+        cpu_percent: 25
+        tokens_per_hour: 100
+    }
+
+    intent do_work() {
+        IO.print("Doing work...")
+    }
+}
+
+workflow Main {
+    step start -> HeavyAgent.do_work
+}

@@ -8,6 +8,7 @@ pub enum AgentState {
     Ready,
     Running,
     Waiting,
+    Suspended,
     Done,
 }
 
@@ -26,12 +27,33 @@ impl AgentRuntime {
         }
     }
 
-    pub fn set_state(&mut self, state: AgentState) {
+    pub async fn set_state(&mut self, state: AgentState) {
         println!("  [Agent:{}] State transition: {:?} -> {:?}", self.name, self.state, state);
-        self.state = state;
+        self.state = state.clone();
+        
+        let event_name = match state {
+            AgentState::Init => "AgentInit",
+            AgentState::Ready => "AgentReady",
+            AgentState::Running => "AgentStarted",
+            AgentState::Waiting => "AgentWaiting",
+            AgentState::Suspended => "AgentSuspended",
+            AgentState::Done => "AgentStopped",
+        };
+        
+        let mut map = std::collections::HashMap::new();
+        map.insert("status".to_string(), serde_json::Value::String(format!("{:?}", state)));
+        
+        let event = Event {
+            name: event_name.to_string(),
+            source_agent: self.name.clone(),
+            target_agent: None,
+            payload: map,
+        };
+        
+        let _ = self.event_bus.publish(event).await;
     }
 
-    pub fn emit(&self, event_name: String, payload: serde_json::Value) {
+    pub async fn emit(&self, event_name: String, payload: serde_json::Value) {
         let mut map = std::collections::HashMap::new();
         map.insert("data".to_string(), payload);
         
@@ -42,7 +64,7 @@ impl AgentRuntime {
             payload: map,
         };
         
-        let _ = self.event_bus.publish(event);
+        let _ = self.event_bus.publish(event).await;
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<Event> {

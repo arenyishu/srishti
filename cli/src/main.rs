@@ -1,8 +1,9 @@
 use clap::{Parser, Subcommand};
 use colored::*;
 
-mod commands;
-mod project;
+pub mod commands;
+pub mod project;
+pub mod verification;
 
 #[derive(Parser)]
 #[command(name = "srishti")]
@@ -23,6 +24,8 @@ enum Commands {
     Build {
         /// The file to build (optional if project has entry point)
         file: Option<String>,
+        #[arg(short, long)]
+        target: Option<String>,
     },
     /// Scaffold a new Srishti project
     Init {
@@ -36,14 +39,66 @@ enum Commands {
     },
     /// Install dependencies
     Install {
-        /// The package to install (optional, defaults to all in srishti.toml)
+        /// Package name to install
         package: Option<String>,
+        /// Optional license key for premium marketplace agents
+        #[arg(long)]
+        license: Option<String>,
+    },
+    /// Publish an agent package to the registry
+    Publish,
+    /// Search the agent registry
+    Search {
+        /// Query string
+        query: String,
+    },
+    /// Start the Srishti Control Plane web dashboard
+    Dashboard {
+        #[arg(long)]
+        demo: bool,
     },
     /// Format a .srishti file
     Fmt {
         /// The file to format
         file: String,
     },
+    /// Srishti cluster management
+    Cluster {
+        #[command(subcommand)]
+        cmd: commands::cluster::ClusterCommands,
+    },
+    /// Manage agent approvals
+    Approvals {
+        #[command(subcommand)]
+        cmd: commands::approvals::ApprovalCommands,
+    },
+    /// Show OS Agent Activity Monitor
+    Top,
+    /// Deploy to Kubernetes via Helm or Cloud
+    Deploy {
+        /// Target deployment (e.g. 'cloud')
+        target: Option<String>,
+    },
+    /// Run OS Validation Suite
+    Verify {
+        #[arg(long)]
+        full: bool,
+        #[arg(long)]
+        quick: bool,
+        #[arg(long)]
+        dashboard: bool,
+        #[arg(long)]
+        sync: bool,
+    },
+    /// Srishti OS Demonstration
+    Demo {
+        #[command(subcommand)]
+        cmd: Option<commands::demo::DemoCommands>,
+    },
+    /// Srishti OS Production Readiness Gate
+    Readiness,
+    /// Generate executable proof of the entire OS system
+    Proof,
 }
 
 #[tokio::main]
@@ -54,8 +109,8 @@ async fn main() {
         Some(Commands::Run { file }) => {
             commands::run::execute(file).await;
         }
-        Some(Commands::Build { file }) => {
-            commands::build::execute(file.as_deref());
+        Some(Commands::Build { file, target }) => {
+            commands::build::execute(file.as_deref(), target.as_deref());
         }
         Some(Commands::Init { name }) => {
             commands::init::execute(name.as_deref());
@@ -63,11 +118,36 @@ async fn main() {
         Some(Commands::Check { file }) => {
             commands::check::execute(file);
         }
-        Some(Commands::Install { package }) => {
-            commands::install::execute(package.as_deref());
+        Some(Commands::Install { package, license }) => commands::install::execute(package.as_deref(), license.as_deref()),
+        Some(Commands::Publish) => commands::registry::publish(),
+        Some(Commands::Search { query }) => commands::registry::search(query),
+        Some(Commands::Dashboard { demo }) => commands::dashboard::execute(*demo),
+        Some(Commands::Fmt { file }) => commands::fmt::execute(file),
+        Some(Commands::Cluster { cmd }) => {
+            commands::cluster::execute(cmd);
         }
-        Some(Commands::Fmt { file }) => {
-            commands::fmt::execute(file);
+        Some(Commands::Approvals { cmd }) => {
+            commands::approvals::execute(cmd);
+        }
+        Some(Commands::Top) => {
+            if let Err(e) = commands::top::execute() {
+                println!("{}", format!("Failed: {}", e).red());
+            }
+        }
+        Some(Commands::Deploy { target }) => {
+            commands::deploy::execute(target.as_deref());
+        }
+        Some(Commands::Verify { full, quick, dashboard, sync }) => {
+            commands::verify::execute(*full, *quick, *dashboard, *sync).await;
+        }
+        Some(Commands::Demo { cmd }) => {
+            commands::demo::execute(cmd).await;
+        }
+        Some(Commands::Readiness) => {
+            commands::readiness::execute();
+        }
+        Some(Commands::Proof) => {
+            commands::proof::execute().await;
         }
         None => {
             print_banner();

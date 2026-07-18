@@ -1,0 +1,8 @@
+agent PaymentAgent {
+    endpoint "srishti://127.0.0.1:50051"
+
+    intent validate() {
+        IO.print("Validating payment...")
+        return true
+    }
+}

@@ -1,0 +1,18 @@
+// Simulate the registry having knowledge of PaymentAgent
+// In a real run, SupportAgent would resolve this via registry.srishti.dev
+agent PaymentAgent {
+    endpoint "srishti://127.0.0.1:50051"
+}
+
+agent SupportAgent {
+    intent resolve_ticket() {
+        IO.print("Processing ticket...")
+        // Call remote agent
+        let result = PaymentAgent.validate()
+        IO.print("Remote call complete")
+    }
+}
+
+workflow Main {
+    step start -> SupportAgent.resolve_ticket
+}

@@ -65,6 +65,9 @@ pub enum Statement {
         event_name: String,
         args: Vec<Expression>,
     },
+    RequireHumanApprovalAbove {
+        limit: f64,
+    },
     AllowRole {
         role: String,
     },
@@ -74,6 +77,8 @@ pub enum Statement {
 #[derive(Debug, Clone, PartialEq)]
 pub struct MemoryDecl {
     pub name: String,
+    pub typ: Option<String>,
+    pub storage: Option<String>,
     pub scope: Option<String>,
     pub retention: Option<String>,
     pub deletion: Option<String>,
@@ -166,12 +171,36 @@ pub struct EventHandler {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ScheduleDecl {
+    pub name: String,
+    pub cron: String,
+    pub trigger_agent: String,
+    pub trigger_intent: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct QuotaDecl {
+    pub memory_mb: Option<i64>,
+    pub cpu_percent: Option<i64>,
+    pub tokens_per_hour: Option<i64>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct AgentDecl {
     pub name: String,
     pub id: Option<String>,
+    pub version: Option<String>,
     pub role: Option<String>,
+    pub enforced_policies: Vec<String>,
     pub permissions: Vec<String>,
+    pub audit: Option<String>,
+    pub monitor: Vec<String>,
+    pub alert_on_failure: Option<String>,
     pub secrets: Vec<String>,
+    pub quota: Option<QuotaDecl>,
+    pub endpoint: Option<String>,
     pub memories: Vec<MemoryDecl>,
     pub tools: Vec<ToolDecl>,
     pub guardrails: Vec<GuardrailDecl>,
@@ -186,6 +215,7 @@ pub struct Program {
     pub imports: Vec<ImportDecl>,
     pub messages: Vec<MessageDecl>,
     pub policies: Vec<PolicyDecl>,
+    pub schedules: Vec<ScheduleDecl>,
     pub agents: Vec<AgentDecl>,
     pub workflows: Vec<WorkflowDecl>,
     pub span: Span,

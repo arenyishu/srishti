@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-primary font-sans antialiased selection:bg-accent-indigo selection:text-white;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-surface/50 backdrop-blur-md border border-border rounded-xl shadow-lg transition-all duration-300;
+  }
+  
+  .glass-panel-hover {
+    @apply hover:border-accent-teal hover:shadow-glow-teal hover:-translate-y-1;
+  }
+  
+  .neon-text {
+    text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+  }
+}

@@ -59,6 +59,7 @@ impl Parser {
         let mut messages = Vec::new();
         let mut policies = Vec::new();
         let mut workflows = Vec::new();
+        let mut schedules = Vec::new();
         let start_span = self.current_span();
 
         while let Some(t) = self.peek() {
@@ -66,6 +67,7 @@ impl Parser {
                 Token::Import => imports.push(self.parse_import()?),
                 Token::Message => messages.push(self.parse_message()?),
                 Token::Policy => policies.push(self.parse_policy()?),
+                Token::Schedule => schedules.push(self.parse_schedule()?),
                 Token::Workflow => workflows.push(self.parse_workflow()?),
                 Token::Agent => agents.push(self.parse_agent()?),
                 Token::EOF => break,
@@ -73,15 +75,13 @@ impl Parser {
             }
         }
         
-        let mut end_span = self.current_span();
-        if self.current > 0 {
-            end_span = self.tokens[self.current - 1].span.clone();
-        }
+
 
         Ok(Program {
             imports,
             messages,
             policies,
+            schedules,
             agents,
             workflows,
             span: Span::new(start_span.line, start_span.column, start_span.offset),
@@ -92,7 +92,7 @@ impl Parser {
         let start_span = self.expect(Token::Import)?;
         
         let mut items = Vec::new();
-        let mut path = String::new();
+        let path;
         let mut alias = None;
 
         // Either `import * from "..."` or `import Agent from "..."`
@@ -148,8 +148,59 @@ impl Parser {
         }
         self.expect(Token::CloseBrace)?;
 
-        Ok(MessageDecl { name, fields, span: start_span })
+        Ok(MessageDecl {
+            name,
+            fields,
+            span: start_span,
+        })
     }
+
+    fn parse_schedule(&mut self) -> Result<ScheduleDecl, String> {
+        let start_span = self.expect(Token::Schedule)?;
+        let (name, _) = self.expect_ident()?;
+        self.expect(Token::OpenBrace)?;
+        
+        let mut cron = String::new();
+        let mut trigger_agent = String::new();
+        let mut trigger_intent = String::new();
+        
+        while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+            match self.peek_token().unwrap() {
+                Token::Cron => {
+                    self.advance();
+                    self.expect(Token::Colon)?;
+                    if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
+                        cron = s;
+                    } else {
+                        return Err("Expected string literal for cron".to_string());
+                    }
+                }
+                Token::Trigger => {
+                    self.advance();
+                    self.expect(Token::Colon)?;
+                    let (agent, _) = self.expect_ident()?;
+                    self.expect(Token::Dot)?;
+                    let (intent, _) = self.expect_ident()?;
+                    trigger_agent = agent;
+                    trigger_intent = intent;
+                }
+                _ => {
+                    let t = self.advance().unwrap();
+                    return Err(format!("Unexpected token {:?} in schedule at line {}", t.token, t.span.line));
+                }
+            }
+        }
+        self.expect(Token::CloseBrace)?;
+        
+        Ok(ScheduleDecl {
+            name,
+            cron,
+            trigger_agent,
+            trigger_intent,
+            span: start_span,
+        })
+    }
+
 
     fn parse_workflow(&mut self) -> Result<WorkflowDecl, String> {
         let start_span = self.expect(Token::Workflow)?;
@@ -216,8 +267,15 @@ impl Parser {
         self.expect(Token::OpenBrace)?;
 
         let mut id = None;
+        let mut version = None;
+        let mut audit = None;
+        let mut monitor = Vec::new();
+        let mut alert_on_failure = None;
+        let mut enforced_policies = Vec::new();
         let mut permissions = Vec::new();
         let mut secrets = Vec::new();
+        let mut quota = None;
+        let mut endpoint = None;
         let mut tools = Vec::new();
         let mut guardrails = Vec::new();
         let mut intents = Vec::new();
@@ -240,6 +298,43 @@ impl Parser {
                         return Err("Expected string literal for id".to_string());
                     }
                 }
+                Token::Version => {
+                    self.advance();
+                    self.expect(Token::Colon)?;
+                    if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
+                        version = Some(s);
+                    } else {
+                        return Err("Expected string literal for version".to_string());
+                    }
+                }
+                Token::Audit => {
+                    self.advance();
+                    self.expect(Token::Colon)?;
+                    let (a, _) = self.expect_ident()?;
+                    audit = Some(a);
+                }
+                Token::Monitor => {
+                    self.advance();
+                    self.expect(Token::Colon)?;
+                    let (m, _) = self.expect_ident()?;
+                    monitor.push(m);
+                    while self.peek_token() == Some(Token::Comma) {
+                        self.advance();
+                        let (m2, _) = self.expect_ident()?;
+                        monitor.push(m2);
+                    }
+                }
+                Token::AlertOnFailure => {
+                    self.advance();
+                    self.expect(Token::Colon)?;
+                    let (a, _) = self.expect_ident()?;
+                    alert_on_failure = Some(a);
+                }
+                Token::Enforce => {
+                    self.advance();
+                    let (p, _) = self.expect_ident()?;
+                    enforced_policies.push(p);
+                }
                 Token::Permission => {
                     self.advance();
                     permissions.push(self.parse_dotted_ident()?);
@@ -249,6 +344,17 @@ impl Parser {
                     self.expect(Token::Secret)?;
                     let (sec, _) = self.expect_ident()?;
                     secrets.push(sec);
+                }
+                Token::Quota => {
+                    quota = Some(self.parse_quota()?);
+                }
+                Token::Endpoint => {
+                    self.advance();
+                    if let Some(SpannedToken { token: Token::StringLiteral(s), .. }) = self.advance() {
+                        endpoint = Some(s);
+                    } else {
+                        return Err("Expected string literal for endpoint".to_string());
+                    }
                 }
                 Token::Memory => memories.push(self.parse_memory()?),
                 Token::Intent => intents.push(self.parse_intent()?),
@@ -262,9 +368,16 @@ impl Parser {
         Ok(AgentDecl {
             name,
             id,
+            version,
             role,
+            enforced_policies,
             permissions,
+            audit,
+            monitor,
+            alert_on_failure,
             secrets,
+            quota,
+            endpoint,
             tools,
             guardrails,
             intents,
@@ -301,8 +414,37 @@ impl Parser {
             }
         }
         self.expect(Token::CloseBrace)?;
-
         Ok(StateDecl { name, transitions, span: start_span })
+    }
+
+    fn parse_quota(&mut self) -> Result<QuotaDecl, String> {
+        let span = self.current_span();
+        self.expect(Token::OpenBrace)?;
+        let mut tokens_per_hour = None;
+        let mut memory_mb = None;
+        let mut cpu_percent = None;
+
+        while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+            let (key, _) = self.expect_ident()?;
+            self.expect(Token::Colon)?;
+            let t = self.advance().ok_or("Unexpected EOF")?;
+            if let SpannedToken { token: Token::IntegerLiteral(val), .. } = t {
+                match key.as_str() {
+                    "tokens_per_hour" => tokens_per_hour = Some(val),
+                    "memory_mb" => memory_mb = Some(val),
+                    "cpu_percent" => cpu_percent = Some(val),
+                    _ => return Err(format!("Unknown quota key: {}", key)),
+                }
+            } else {
+                return Err("Expected integer for quota value".to_string());
+            }
+
+            if self.peek_token() == Some(Token::Comma) {
+                self.advance();
+            }
+        }
+        self.expect(Token::CloseBrace)?;
+        Ok(QuotaDecl { memory_mb, cpu_percent, tokens_per_hour, span })
     }
 
     fn parse_event_handler(&mut self) -> Result<EventHandler, String> {
@@ -329,6 +471,8 @@ impl Parser {
         let mut deletion = None;
         let mut encryption = None;
         let mut index = None;
+        let mut typ = None;
+        let mut storage = None;
 
         if self.peek_token() == Some(Token::OpenBrace) {
             self.expect(Token::OpenBrace)?;
@@ -373,13 +517,25 @@ impl Parser {
                         let (val, _) = self.expect_ident()?;
                         index = Some(val);
                     }
+                    Token::Identifier(ref id) if id == "type" => {
+                        self.advance();
+                        self.expect(Token::Colon)?;
+                        let (val, _) = self.expect_ident()?;
+                        typ = Some(val);
+                    }
+                    Token::Identifier(ref id) if id == "storage" => {
+                        self.advance();
+                        self.expect(Token::Colon)?;
+                        let (val, _) = self.expect_ident()?;
+                        storage = Some(val);
+                    }
                     _ => return Err(format!("Unexpected token in memory block: {:?}", t)),
                 }
             }
             self.expect(Token::CloseBrace)?;
         }
 
-        Ok(MemoryDecl { name, scope, retention, deletion, encryption, index, span })
+        Ok(MemoryDecl { name, typ, storage, scope, retention, deletion, encryption, index, span })
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
@@ -563,7 +719,7 @@ impl Parser {
 
     fn parse_statements(&mut self) -> Result<Vec<Statement>, String> {
         let mut stmts = Vec::new();
-        while self.peek_token() != Some(Token::CloseBrace) && self.peek_token() != Some(Token::EOF) {
+        while self.peek().is_some() && self.peek().unwrap().token != Token::CloseBrace {
             stmts.push(self.parse_statement()?);
         }
         self.expect(Token::CloseBrace)?;
@@ -626,6 +782,20 @@ impl Parser {
                 self.expect(Token::Role)?;
                 let (role, _) = self.expect_ident()?;
                 Ok(Statement::AllowRole { role })
+            }
+            Some(Token::RequireHumanApprovalAbove) => {
+                self.advance();
+                self.expect(Token::OpenParen)?;
+                let next = self.advance();
+                if let Some(SpannedToken { token: Token::FloatLiteral(f), .. }) = next {
+                    self.expect(Token::CloseParen)?;
+                    Ok(Statement::RequireHumanApprovalAbove { limit: f })
+                } else if let Some(SpannedToken { token: Token::IntegerLiteral(i), .. }) = next {
+                    self.expect(Token::CloseParen)?;
+                    Ok(Statement::RequireHumanApprovalAbove { limit: i as f64 })
+                } else {
+                    Err("Expected float or integer after require_human_approval_above".to_string())
+                }
             }
             Some(Token::Achieve) => {
                 self.advance();

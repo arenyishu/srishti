@@ -11,3 +11,4 @@ srishti-runtime = { path = "../runtime" }
 colored = "2"
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
+tokio-cron-scheduler = "0.15.1"

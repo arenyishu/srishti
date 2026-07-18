@@ -5,7 +5,7 @@ use srishti_compiler::parser::Parser;
 use std::fs;
 use std::path::Path;
 
-pub fn execute(filepath: Option<&str>) {
+pub fn execute(filepath: Option<&str>, target_arg: Option<&str>) {
     let loaded_project = project::load_project();
     let file = filepath
         .map(str::to_owned)
@@ -20,11 +20,13 @@ pub fn execute(filepath: Option<&str>) {
         .and_then(|p| p.build.as_ref())
         .and_then(|build| build.output.clone())
         .unwrap_or_else(|| "build".to_string());
-    let build_target = loaded_project
-        .as_ref()
-        .and_then(|p| p.build.as_ref())
-        .and_then(|build| build.target.as_deref())
-        .unwrap_or("binary");
+    let build_target = target_arg.unwrap_or_else(|| {
+        loaded_project
+            .as_ref()
+            .and_then(|p| p.build.as_ref())
+            .and_then(|build| build.target.as_deref())
+            .unwrap_or("binary")
+    });
 
     if let Some(project) = &loaded_project {
         println!(
@@ -87,6 +89,46 @@ pub fn execute(filepath: Option<&str>) {
             fs::write(&output_file, rust_code).expect("Failed to write generated code");
 
             println!("{} {}", "Code generated:".green(), output_file.display());
+            
+            if build_target == "docker" {
+                let cargo_toml = r#"[package]
+name = "srishti-agent"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+"#;
+                let cargo_path = build_dir.join("Cargo.toml");
+                fs::write(&cargo_path, cargo_toml).expect("Failed to write Cargo.toml");
+
+                let main_rs = r#"
+fn main() {
+    println!("Srishti Agent Booting...");
+}
+"#;
+                let src_dir = build_dir.join("src");
+                fs::create_dir_all(&src_dir).unwrap_or_default();
+                fs::write(src_dir.join("main.rs"), main_rs).expect("Failed to write main.rs");
+
+                let dockerfile = r#"FROM rust:1.80 as builder
+WORKDIR /app
+COPY . .
+RUN cargo build --release
+
+FROM debian:bookworm-slim
+WORKDIR /app
+COPY --from=builder /app/target/release/srishti-agent .
+CMD ["./srishti-agent"]
+"#;
+                let docker_path = build_dir.join("Dockerfile");
+                fs::write(&docker_path, dockerfile).expect("Failed to write Dockerfile");
+                println!("{} {}", "Cargo.toml and Dockerfile generated:".green(), build_dir.display());
+            }
+
             println!("{}", "Build complete.".green().bold());
         }
         Err(e) => {
