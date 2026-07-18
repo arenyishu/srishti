@@ -2,377 +2,83 @@
 
 ## Vision
 
-Srishti is an Agent Runtime Platform for Reliable AI Systems, powered by an Agent-Oriented Programming Language (AOPL).
+Srishti is an **AI Operating System (AI-OS)** designed from the ground up to manage, execute, and coordinate AI agents as native system processes.
 
-The platform combines agents, memory, workflows, guardrails, semantic reasoning, and runtime execution into a unified environment for building intelligent systems.
-
-The long-term vision is to become the foundational runtime layer for AI-native software systems — enabling developers to build, govern, deploy, and scale AI agents as naturally as modern applications are built today.
+The long-term vision is to become the foundational runtime kernel for AI-native software systems — enabling developers to build, govern, deploy, and scale AI agents as naturally and securely as traditional software.
 
 ---
 
-# v0.1.0 – Beej ✅
+## The Foundation (Completed) ✅
 
-## Compiler Foundation
+### v0.1.0 to v0.3.0 – The Kernel & Runtime Foundation
+Srishti has successfully transitioned from an experimental compiler into a functional executable OS layer.
 
-* Lexer
-* Parser
-* AST Generation
-* Rust Code Generation
-* Initial Agent Syntax
-* Compiler Architecture
-
-**Meaning:** Seed
-
-**Status:** Released
+* **Compiler & Toolchain:** Full AOPL Compiler, Lexer, Parser, and CLI (`srishti run`, `check`, `build`).
+* **Kernel & Process Supervisor:** Agent Lifecycle Management and Process Table tracking.
+* **Inter-Process Communication (IPC):** Event Bus Architecture and dynamic event routing.
+* **Networking:** Basic RPC Networking and Agent Registry for service discovery.
+* **Basic Memory:** Foundation for memory allocation and state management.
+* **Telemetry:** Real-time Dashboard server and internal telemetry APIs.
 
 ---
 
-# v0.2.0 – Ankur ✅
+## The Future: OS Architecture Roadmap
 
-## Language, Runtime & Toolchain Foundation
+### v0.4.0 – Security Ring & Governance (Sankalp) 🚧 *In Progress*
+*Transforming the basic policy engine into a robust OS security layer.*
 
-### Language Features
+* **Kernel-Level Sandboxing:** Hard limits and quotas on what agents can execute.
+* **Approval Store:** Human-in-the-loop intercepts and workflow halting for privileged actions.
+* **Audit Subsystem:** Immutable, append-only logging of all OS-level state changes and agent executions.
+* **Access Control:** Strict Agent-to-Agent permission scopes and Identity management.
 
-* Agents
-* Memory
-* Tools
-* Guardrails
-* Intents
-* Messages
-* Events
-* Workflows
+### v0.5.0 – Semantic CPU & Execution (Shakti)
+*Making the OS natively intelligent.*
 
-### CLI Toolchain
+* **Pluggable LLM Drivers:** Native OS support for OpenAI, Ollama, Anthropic, and Gemini.
+* **Hardware Abstraction:** Switch between cloud AI APIs and local on-device models seamlessly.
+* **Semantic Scheduler:** OS-level planning, reasoning, and context management.
+* **Structured Generation:** Guaranteed JSON outputs and typed schema enforcement.
 
-* `srishti init`
-* `srishti run`
-* `srishti build`
-* `srishti check`
-* `srishti install`
-* `srishti fmt`
+### v0.6.0 – Advanced Memory Management (Pragati)
+*Evolving from basic state arrays to true OS-level memory architecture.*
 
-### Runtime Foundation
+* **Memory Paging & Swap:** Archiving old context to disk (SQLite/PostgreSQL) when RAM is full.
+* **Vector Memory Integration:** Built-in embeddings and similarity search without manual DB wiring.
+* **Shared Memory Spaces:** Multiple agents reading and writing from the same allocated context block safely.
+* **Memory Encryption:** Securing sensitive agent states and isolated memory per process.
 
-* Tree-Walking Interpreter
-* Agent Lifecycle Management
-* Event Bus
-* Workflow Execution
-* Memory Foundation
-* Mock Semantic Engine
-* OpenAI Provider Foundation
-* Ollama Provider Foundation
+### v0.7.0 – Distributed Computing (Udaan)
+*Scaling the OS across multiple machines and clusters.*
 
-### Demonstrations
+* **Advanced Remote Procedure Calls (RPC):** Agents talking seamlessly across different physical servers.
+* **Cluster Load Balancing:** Intelligently distributing agent workloads across the node cluster.
+* **Fault Tolerance & State Replication:** If a node dies, the OS Supervisor restarts the agent on a healthy node with intact state.
 
-* Support Agent
-* Travel Agent
-* Chatbot
-* Multi-Agent Workflow
-* Customer Support Automation System
+### v0.8.0 – Developer Tooling & Ecosystem (Siddhi)
+*Building out the User Space tools for developers.*
 
-**Meaning:** Sprout
+* **Package Manager:** `srishti install` for third-party agents and dependency resolution.
+* **Language Server (LSP):** Official VS Code extensions, syntax highlighting, and inline diagnostics.
+* **System Monitoring:** Top-like CLI commands (`srishti top`) to monitor CPU/Token/Memory usage in real time.
+* **Developer Playground:** Web-based simulator and formatting tools (`srishti fmt`).
 
-**Status:** Released
+### v0.9.0 – Production Hardening (Moksha)
+*Preparing the OS for enterprise workloads.*
 
----
+* **Performance Tuning:** Deep Rust compiler optimizations and lock-free concurrency.
+* **Security Auditing:** Penetration testing and vulnerability patches.
+* **Deployment Tooling:** Official Docker/Kubernetes containerization support for the Srishti Kernel.
 
-# v0.3.0 – Prarambh ✅
+### v1.0.0 – Srishti The AI Kernel
+*The golden release.*
 
-## Agent Runtime Platform Foundation
-
-### Runtime Execution
-
-* Event-Driven Agent Runtime
-* Intent Execution Engine
-* Dynamic Event Routing
-* Agent State Management
-* Runtime Context Propagation
-
-### Semantic Execution
-
-* OpenAI Integration
-* Ollama Integration Foundation
-* Semantic Intent Resolution
-* Runtime Provider Abstraction
-
-### Multi-Agent Coordination
-
-* Workflow Execution Engine
-* Event-Based Agent Communication
-* Customer Support Runtime Demo
-* Chatbot Runtime Demo
-
-### Platform Features
-
-* Memory Operations
-* Guardrail Execution
-* Agent Lifecycle Runtime
-* Event Bus Architecture
-
-### Developer Experience
-
-* Enhanced Diagnostics Foundation
-* Workflow Validation
-* Integration Testing Foundation
-
-**Goal:** Transform Srishti from a compiler project into an executable Agent Runtime Platform.
-
-**Meaning:** Beginning
-
-**Status:** Released
+* **Production Runtime:** Long-Term Support (LTS) release of the Srishti OS.
+* **Stable Specification:** Guaranteed backward compatibility for AOPL.
+* **Enterprise Features:** Multi-organization agent management and compliance packs.
 
 ---
-
-# v0.4.0 – Sankalp 🚧
-
-## Governance & Reliability
-
-### Policy Engine
-
-* Policy Definitions ✅
-* Runtime Policy Enforcement ✅
-* Approval Workflows ✅
-* Human-in-the-Loop Controls ✅
-
-### Agent Governance
-
-* Agent Identity ✅
-* Permissions ✅
-* Secrets Management
-* Access Control ✅
-
-### Auditability
-
-* Audit Logs
-* Execution Tracing
-* Compliance Records
-
-### Structured Outputs
-
-* JSON Outputs
-* Schema Validation
-* Typed Responses
-
-**Goal:** Build governable, safe, and auditable AI systems.
-
-**Meaning:** Resolve / Vision
-
----
-
-# v0.5.0 – Shakti
-
-## Semantic Intelligence
-
-### LLM Providers
-
-* OpenAI
-* Ollama
-* Anthropic
-* Gemini
-
-### Semantic Engine
-
-* Planning
-* Reasoning
-* Context Management
-* Prompt Templates
-* Structured Generation
-* Tool Selection
-
-### Hybrid Execution
-
-* Deterministic Control Flow
-* Semantic Decision Making
-
-**Goal:** Enable intelligent and controllable agent reasoning.
-
-**Meaning:** Power
-
----
-
-# v0.6.0 – Pragati
-
-## Memory Platform
-
-### Memory Types
-
-* Session Memory
-* Long-Term Memory
-* Vector Memory
-* Shared Agent Memory
-
-### Retrieval
-
-* Embeddings
-* Similarity Search
-* Knowledge Retrieval
-
-### Persistence
-
-* Local Storage
-* SQLite
-* PostgreSQL
-* External Vector Databases
-
-### Governance
-
-* Memory Retention Policies
-* Memory Encryption
-* Memory Isolation
-
-**Goal:** Enable persistent, context-aware agents.
-
-**Meaning:** Progress
-
----
-
-# v0.7.0 – Udaan
-
-## Multi-Agent Platform
-
-### Communication
-
-* Messages
-* Channels
-* Events
-* Agent Discovery
-
-### Coordination
-
-* Agent Workflows
-* Shared Memory
-* Agent Orchestration
-* Human-in-the-Loop Support
-
-### Distributed Runtime
-
-* Remote Agents
-* Service Discovery ✅ (via `Agent Registry`)
-* Agent Networking ✅ (via `gRPC` & `Event Bus`)
-* Distributed Execution ✅ (via `Cluster Management` & `State Replication`)
-
-**Goal:** Enable collaborative AI systems at scale.
-
-**Meaning:** Flight
-
----
-
-# v0.8.0 – Siddhi
-
-## Developer Ecosystem
-
-### Package Registry
-
-* Package Publishing
-* Dependency Resolution
-* Version Management
-
-### Tooling
-
-* VS Code Extension
-* Language Server Protocol (LSP)
-* Autocomplete
-* Diagnostics
-* Syntax Highlighting
-
-### Developer Tools
-
-* Formatter
-* Linter
-* Playground
-* Templates
-
-**Goal:** Improve developer productivity and adoption.
-
-**Meaning:** Achievement
-
----
-
-# v0.9.0 – Moksha
-
-## Production Readiness
-
-### Optimization
-
-* Compiler Optimization
-* Runtime Optimization
-* Workflow Optimization
-
-### Reliability
-
-* Security Auditing
-* Performance Tuning
-* Load Testing
-
-### Deployment
-
-* Docker Support
-* CI/CD Integration
-* Deployment Tooling
-
-**Goal:** Prepare Srishti for production workloads.
-
-**Meaning:** Liberation
-
----
-
-# v1.0.0 – Srishti
-
-## Production Agent Runtime Platform
-
-### Runtime
-
-* Production Runtime
-* Enterprise Runtime Features
-* Distributed Agent Platform
-
-### Governance
-
-* Policy Engine
-* Governance Framework
-* Audit Trails
-* Compliance Modules
-
-### Deployment
-
-* WASM Target
-* Cloud Deployment
-* Container Deployment
-
-### Support
-
-* Stable Specification
-* Backward Compatibility
-* Long-Term Support (LTS)
-
-**Goal:** Production-ready Agent Runtime Platform for Reliable AI Systems.
-
----
-
-# Beyond v1.0
-
-## Srishti Cloud
-
-* Hosted Agent Runtime
-* Managed Memory
-* Managed Semantic Engine
-* Agent Monitoring
-* Agent Analytics
-
-## Srishti Registry
-
-* Agent Marketplace
-* Package Registry
-* Workflow Templates
-* Shared Policies
-
-## Srishti Enterprise
-
-* Governance Platform
-* Compliance Packs
-* Enterprise Security
-* Multi-Organization Agent Management
 
 ## Long-Term Vision
 
-Create the operating system layer for AI agents, enabling developers and organizations to build, govern, deploy, monitor, and scale intelligent systems on a unified runtime platform.
+Create the definitive operating system layer for AI, ending the era of fragmented python scripts and API chains. Srishti will allow developers and organizations to govern, deploy, and scale intelligent systems on a unified, high-performance runtime kernel.
