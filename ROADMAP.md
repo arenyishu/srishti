@@ -129,17 +129,17 @@ The long-term vision is to become the foundational runtime layer for AI-native s
 
 ### Policy Engine
 
-* Policy Definitions
-* Runtime Policy Enforcement
-* Approval Workflows
-* Human-in-the-Loop Controls
+* Policy Definitions ✅
+* Runtime Policy Enforcement ✅
+* Approval Workflows ✅
+* Human-in-the-Loop Controls ✅
 
 ### Agent Governance
 
-* Agent Identity
-* Permissions
+* Agent Identity ✅
+* Permissions ✅
 * Secrets Management
-* Access Control
+* Access Control ✅
 
 ### Auditability
 
@@ -247,9 +247,9 @@ The long-term vision is to become the foundational runtime layer for AI-native s
 ### Distributed Runtime
 
 * Remote Agents
-* Service Discovery
-* Agent Networking
-* Distributed Execution
+* Service Discovery ✅ (via `Agent Registry`)
+* Agent Networking ✅ (via `gRPC` & `Event Bus`)
+* Distributed Execution ✅ (via `Cluster Management` & `State Replication`)
 
 **Goal:** Enable collaborative AI systems at scale.
 
