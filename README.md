@@ -94,3 +94,27 @@ Current capabilities include:
 * Customer Support System Demonstration
 
 Srishti is currently an experimental research platform under active development.
+
+---
+
+## Installation
+
+1. Ensure you have [Rust and Cargo](https://rustup.rs/) installed.
+2. Install `protoc` (Protocol Buffers Compiler), as it is required for compilation. You can download it from [the official repository](https://github.com/protocolbuffers/protobuf/releases) or use a package manager. (Make sure it is in your system `PATH` or set the `PROTOC` environment variable).
+3. Clone the repository and build the project:
+   ```bash
+   git clone https://github.com/arenyishu/srishti.git
+   cd srishti
+   cargo build --release
+   ```
+
+## Usage
+
+You can interact with Srishti using its built-in CLI tool.
+
+```bash
+# To check your Srishti project code for errors
+cargo run --bin srishti -- check
+
+# (Other CLI commands will be documented here as the platform evolves)
+```
